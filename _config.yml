@@ -2,12 +2,19 @@
 #      Main Configs       #
 # ----------------------- #
 
-url: http://yoursite.com
-title: My Octopress Blog
-subtitle: A blogging framework for hackers.
-author: Your Name
+url: http://lisachenko.github.com/go-aop-php
+title: Go! Aspect-Oriented Framework
+subtitle: Aspect-Oriented Programming in PHP.
+author: Lisachenko Alexander
 simple_search: http://google.com/search
+
 description:
+  Go! library adds Aspect-Oriented paradigm to the PHP.
+  Aspect-Oriented Programming (AOP) complements Object-Oriented Programming (OOP) by providing another way
+  of thinking about program structure.
+  In addition to classes, AOP gives you aspects.
+  Aspects enable modularization of concerns such as transaction management that cut across multiple types and objects.
+  (Such concerns are often termed crosscutting concerns.)
 
 # Default date format is "ordinal" (resulting in "July 22nd 2007")
 # You can customize the format as defined in
@@ -16,7 +23,7 @@ description:
 date_format: "ordinal"
 
 # RSS / Email (optional) subscription links (change if using something like Feedburner)
-subscribe_rss: /atom.xml
+subscribe_rss: /go-aop-php/atom.xml
 subscribe_email:
 # RSS feeds can list your email address if you like
 email:
@@ -26,10 +33,10 @@ email:
 # ----------------------- #
 
 # If publishing to a subdirectory as in http://site.com/project set 'root: /project'
-root: /
+root: /go-aop-php
 permalink: /blog/:year/:month/:day/:title/
 source: source
-destination: public
+destination: public/go-aop-php
 plugins: plugins
 code_dir: downloads/code
 category_dir: blog/categories
@@ -64,7 +71,7 @@ github_show_profile_link: true
 github_skip_forks: true
 
 # Twitter
-twitter_user:
+twitter_user: lisachenko
 twitter_tweet_count: 4
 twitter_show_replies: false
 twitter_follow_button: true
@@ -72,13 +79,13 @@ twitter_show_follower_count: false
 twitter_tweet_button: true
 
 # Google +1
-google_plus_one: false
+google_plus_one: true
 google_plus_one_size: medium
 
 # Google Plus Profile
 # Hidden: No visible button, just add author information to search results
-googleplus_user:
-googleplus_hidden: false
+googleplus_user: 112404666490406543209
+googleplus_hidden: true
 
 # Pinboard
 pinboard_user:
@@ -96,4 +103,4 @@ disqus_show_comment_count: false
 google_analytics_tracking_id:
 
 # Facebook Like
-facebook_like: false
+facebook_like: true
