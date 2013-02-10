@@ -16,6 +16,8 @@ description:
   Aspects enable modularization of concerns such as transaction management that cut across multiple types and objects.
   (Such concerns are often termed crosscutting concerns.)
 
+keywords: AOP, PHP, Aspect-Oriented Programming, Hooks, Method Interception, Advice, Invocation, Go! AOP
+
 # Default date format is "ordinal" (resulting in "July 22nd 2007")
 # You can customize the format as defined in
 # http://www.ruby-doc.org/core-1.9.2/Time.html#method-i-strftime
@@ -96,8 +98,8 @@ delicious_user:
 delicious_count: 3
 
 # Disqus Comments
-disqus_short_name:
-disqus_show_comment_count: false
+disqus_short_name: go-aop-php
+disqus_show_comment_count: true
 
 # Google Analytics
 google_analytics_tracking_id:
