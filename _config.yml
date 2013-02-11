@@ -2,7 +2,7 @@
 #      Main Configs       #
 # ----------------------- #
 
-url: http://lisachenko.github.com/go-aop-php
+url: http://go.aopphp.com
 title: Go! Aspect-Oriented Framework
 subtitle: Aspect-Oriented Programming in PHP.
 author: Lisachenko Alexander
@@ -25,7 +25,7 @@ keywords: AOP, PHP, Aspect-Oriented Programming, Hooks, Method Interception, Adv
 date_format: "ordinal"
 
 # RSS / Email (optional) subscription links (change if using something like Feedburner)
-subscribe_rss: /go-aop-php/atom.xml
+subscribe_rss: /atom.xml
 subscribe_email:
 # RSS feeds can list your email address if you like
 email:
@@ -35,7 +35,7 @@ email:
 # ----------------------- #
 
 # If publishing to a subdirectory as in http://site.com/project set 'root: /project'
-root: /go-aop-php
+root: /
 permalink: /blog/:year/:month/:day/:title/
 source: source
 destination: public/go-aop-php
