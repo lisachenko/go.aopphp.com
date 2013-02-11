@@ -1,4 +1,4 @@
 User-agent: *
 Disallow: 
 
-Sitemap: http://lisachenko.github.com/go-aop-php/sitemap.xml 
+Sitemap: http://go.aopphp.com/sitemap.xml 

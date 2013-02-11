@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Go! Aspect-Oriented Framework]]></title>
-  <link href="http://lisachenko.github.com/go-aop-php/atom.xml" rel="self"/>
-  <link href="http://lisachenko.github.com/go-aop-php/"/>
-  <updated>2013-02-10T23:44:10+04:00</updated>
-  <id>http://lisachenko.github.com/go-aop-php/</id>
+  <link href="http://go.aopphp.com/atom.xml" rel="self"/>
+  <link href="http://go.aopphp.com/"/>
+  <updated>2013-02-11T21:08:19+04:00</updated>
+  <id>http://go.aopphp.com/</id>
   <author>
     <name><![CDATA[Lisachenko Alexander]]></name>
     
