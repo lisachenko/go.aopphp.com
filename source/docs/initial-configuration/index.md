@@ -1,6 +1,11 @@
 ---
 layout: page
 title: "Initial configuration"
+description: |
+    This article describes initial configuration of Go! AOP kernel to use
+    aspect-oriented programming in application
+keywords: AOP, application, initial configuration, setup, aspect definition
+
 date: 2013-02-09 00:58
 comments: true
 sharing: true

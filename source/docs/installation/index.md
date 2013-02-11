@@ -1,6 +1,9 @@
 ---
 layout: page
 title: "Library installation"
+description: "Installation of library into application with composer or git submodules"
+keywords: "Go! AOP, library, installation, composer, git, submodules"
+
 date: 2013-02-09 00:40
 comments: true
 sharing: true
