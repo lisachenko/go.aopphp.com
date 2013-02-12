@@ -5,13 +5,13 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>Library installation - Go! Aspect-Oriented Framework</title>
+  <title>Aspect-Oriented Framework for PHP - Go! Aspect-Oriented Framework</title>
   <meta name="author" content="Lisachenko Alexander">
 
   
-  <meta name="description" content="Installation of library into application with composer or git submodules">
+  <meta name="description" content="Go! library adds Aspect-Oriented paradigm to the PHP. Aspect-Oriented Programming (AOP) complements Object-Oriented Programming (OOP) by providing another way of thinking about program structure. In addition to classes, AOP gives you aspects. Aspects enable modularization of concerns such as transaction management that cut across multiple types and objects. (Such concerns are often termed crosscutting concerns.)">
   
-  <meta name="keywords" content="Go! AOP, library, installation, composer, git, submodules">
+  <meta name="keywords" content="AOP, PHP, Aspect-Oriented Programming, Hooks, Method Interception, Advice, Invocation, Go! AOP">
 
   <!-- http://t.co/dKP3o1e -->
   <meta name="HandheldFriendly" content="True">
@@ -19,7 +19,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://go.aopphp.com/docs/installation/">
+  <link rel="canonical" href="http://go.aopphp.com/blog/2013/02/11/aspect-oriented-framework-for-php/">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <script src="/javascripts/modernizr-2.0.js"></script>
@@ -77,83 +77,81 @@
   <div id="main">
     <div id="content">
       <div>
-<article role="article">
+<article class="hentry" role="article">
   
   <header>
-    <h2 class="entry-title">Library Installation</h2>
-  </header>
-  
-  <p>Go! library can be installed with composer or manually with git submodules. Installation is quite easy.</p>
-
-<h3>Method 1: Download go-aop-php using composer</h3>
-
-<p>The simplest way to install Go! AOP library is through Composer. Just add the library to your composer.json:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='js'><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="s2">&quot;require&quot;</span><span class="o">:</span> <span class="p">{</span>
-</span><span class='line'>        <span class="s2">&quot;lisachenko/go-aop-php&quot;</span><span class="o">:</span> <span class="s2">&quot;*&quot;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Now ask the composer to download the library with its dependencies by running the command:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>php composer.phar install
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Composer will install the library to your project&#8217;s <code>vendor/lisachenko/go-aop-php</code> directory.</p>
-
-<h3>Method 2: Download with Git</h3>
-
-<p>Alternative way for installing the library is to use git submodules:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>git submodule add https://github.com/lisachenko/go-aop-php vendor/lisachenko/go-aop-php
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Dependencies should be also installed as submodules:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>git submodule add https://github.com/Andrewsville/PHP-Token-Reflection vendor/andrewsville/php-token-reflection
-</span><span class='line'>git submodule add https://github.com/doctrine/common vendor/doctrine/common
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a class="next" href="../initial-configuration/">Initial configuration &rarr;</a></p>
-
-  
-    <footer>
+    
+      <h2 class="entry-title">Aspect-Oriented Framework for PHP</h2>
+    
+    
       <p class="meta">
         
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-02-09T00:40:00+04:00" pubdate data-updated="true">Feb 9<span>th</span>, 2013</time>
+         | <a href="#disqus_thread">Comments</a>
         
       </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>Go! is a PHP 5.4 framework based on OOP and AOP paradigms and designed by Lisachenko Alexander.
+It allows developers to add support of AOP to every PHP application.</p>
+
+<p>Go! doesn&#8217;t require any PECL-extentions, it neither uses any dark magic of Runkit nor evals, the library doesn&#8217;t use DI-containers.
+The code with weaved aspects is fully readable and native, it can be easily debugged with XDebug.
+You can debug either classes or aspects.
+The main advantage of Go! is that potentially it can be installed in every PHP-application,
+because you don&#8217;t have to change the application source code at all.
+As an example, with the help of 10-20 lines of code we can intercept all the public, protected and static methods in all the classes
+of application and display the name and the arguments of each method during its execution.</p>
+
+<h2>What is AOP?</h2>
+
+<p><a href="http://en.wikipedia.org/wiki/Aspect-oriented_programming">AOP (Aspect-Oriented Programming)</a> is an approach to cross-cutting concerns, where the concerns are designed and implemented
+in a &#8220;modular&#8221; way (that is, with appropriate encapsulation, lack of duplication, etc.), then integrated into all the relevant
+execution points in a succinct and robust way, e.g. through declarative or programmatic means.</p>
+
+<p>In AOP terms, the execution points are called join points, a particular set of them is called a pointcut and the new
+behavior that is executed before, after, or &#8220;around&#8221; a join point is called advice. You can read more about AOP in
+<a href="/docs/introduction/">Introduction</a> section.</p>
+
+<p>PHP traits can be used to implement some aspect-like functionality.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
       
-        <div class="sharing">
   
-  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://go.aopphp.com/docs/installation/index.html" data-via="lisachenko" data-counturl="http://go.aopphp.com/docs/installation/index.html" >Tweet</a>
+
+<span class="byline author vcard">Posted by <span class="fn">Lisachenko Alexander</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-02-11T22:55:00+04:00" pubdate data-updated="true">Feb 11<span>th</span>, 2013</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/aop/'>aop</a>, <a class='category' href='/blog/categories/framework/'>framework</a>, <a class='category' href='/blog/categories/php/'>php</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://go.aopphp.com/blog/2013/02/11/aspect-oriented-framework-for-php/" data-via="lisachenko" data-counturl="http://go.aopphp.com/blog/2013/02/11/aspect-oriented-framework-for-php/" >Tweet</a>
   
   
   <div class="g-plusone" data-size="medium"></div>
@@ -163,9 +161,12 @@
   
 </div>
 
+    
+    <p class="meta">
       
-    </footer>
-  
+      
+    </p>
+  </footer>
 </article>
 
   <section>
@@ -238,8 +239,8 @@
       
         
         // var disqus_developer = 1;
-        var disqus_identifier = 'http://go.aopphp.com/docs/installation/index.html';
-        var disqus_url = 'http://go.aopphp.com/docs/installation/index.html';
+        var disqus_identifier = 'http://go.aopphp.com/blog/2013/02/11/aspect-oriented-framework-for-php/';
+        var disqus_url = 'http://go.aopphp.com/blog/2013/02/11/aspect-oriented-framework-for-php/';
         var disqus_script = 'embed.js';
       
     (function () {

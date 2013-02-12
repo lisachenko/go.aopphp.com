@@ -5,13 +5,14 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>Library installation - Go! Aspect-Oriented Framework</title>
+  <title>Introduction to aspect-oriented programming - Go! Aspect-Oriented Framework</title>
   <meta name="author" content="Lisachenko Alexander">
 
   
-  <meta name="description" content="Installation of library into application with composer or git submodules">
+  <meta name="description" content="Article makes an introduction to aspect-oriented programming in PHP. AOP glossary defined
+">
   
-  <meta name="keywords" content="Go! AOP, library, installation, composer, git, submodules">
+  <meta name="keywords" content="Introduction, AOP, PHP, glossary, definition, crosscutting concerns">
 
   <!-- http://t.co/dKP3o1e -->
   <meta name="HandheldFriendly" content="True">
@@ -19,7 +20,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://go.aopphp.com/docs/installation/">
+  <link rel="canonical" href="http://go.aopphp.com/docs/introduction/">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <script src="/javascripts/modernizr-2.0.js"></script>
@@ -80,56 +81,66 @@
 <article role="article">
   
   <header>
-    <h2 class="entry-title">Library Installation</h2>
+    <h2 class="entry-title">Introduction to Aspect-oriented Programming</h2>
   </header>
   
-  <p>Go! library can be installed with composer or manually with git submodules. Installation is quite easy.</p>
+  <p>The motivation for Go! (and likewise for aspect-oriented programming) is the realization that there are issues or
+concerns that are not well captured by traditional programming methodologies.
+Consider the problem of enforcing a security policy in some application. By its nature, security cuts across many of
+the natural units of modularity of the application. Moreover, the security policy must be uniformly applied to any
+additions as the application evolves. And the security policy that is being applied might itself evolve. Capturing
+concerns like a security policy in a disciplined way is difficult and error-prone in a traditional programming language.</p>
 
-<h3>Method 1: Download go-aop-php using composer</h3>
+<p>Concerns like security cut across the natural units of modularity. For PHP the natural unit of modularity is the class.
+But in PHP crosscutting concerns are not easily turned into classes precisely because they cut across classes, and so
+these aren&#8217;t reusable, they can&#8217;t be refined or inherited, they are spread through out the program in an undisciplined
+way, in short, they are difficult to work with.</p>
 
-<p>The simplest way to install Go! AOP library is through Composer. Just add the library to your composer.json:</p>
+<p>Aspect-oriented programming is a way of modularizing crosscutting concerns much like object-oriented programming is a
+way of modularizing common concerns. Go! is an implementation of aspect-oriented programming for PHP.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='js'><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="s2">&quot;require&quot;</span><span class="o">:</span> <span class="p">{</span>
-</span><span class='line'>        <span class="s2">&quot;lisachenko/go-aop-php&quot;</span><span class="o">:</span> <span class="s2">&quot;*&quot;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
+<p>Go! adds to PHP only a few new constructs: joinpoints, pointcuts, advice, inter-type declarations and aspects.
+Pointcuts and advice dynamically affect program flow, inter-type declarations statically affects a program&#8217;s class
+hierarchy, and aspects encapsulate these new constructs.</p>
 
+<h2>Glossary</h2>
 
-<p>Now ask the composer to download the library with its dependencies by running the command:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>php composer.phar install
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Composer will install the library to your project&#8217;s <code>vendor/lisachenko/go-aop-php</code> directory.</p>
-
-<h3>Method 2: Download with Git</h3>
-
-<p>Alternative way for installing the library is to use git submodules:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>git submodule add https://github.com/lisachenko/go-aop-php vendor/lisachenko/go-aop-php
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Dependencies should be also installed as submodules:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>git submodule add https://github.com/Andrewsville/PHP-Token-Reflection vendor/andrewsville/php-token-reflection
-</span><span class='line'>git submodule add https://github.com/doctrine/common vendor/doctrine/common
-</span></code></pre></td></tr></table></div></figure>
+<ul>
+<li><strong>Aspect</strong>: A modularization of a concern that cuts across multiple objects. Logging, caching, transaction management
+are good examples of a crosscutting concern in PHP applications.
+Go! defines aspects as regular classes implemented empty Aspect interface and annotated with the @Aspect annotation.</li>
+<li><strong>Join point</strong>: A point during the execution of a script, such as the execution of a method or property access.</li>
+<li><strong>Advice</strong>: Action taken by an aspect at a particular join point. There are different types of advice: @Around,
+@Before and @After advice.</li>
+<li><strong>Pointcut</strong>: A regular expression that matches join points. Advice is associated with a pointcut expression and
+runs at any join point matched by the pointcut (for example, the execution of a method with a certain name).</li>
+<li><strong>Introduction</strong>: (Also known as an inter-type declaration). Go! allows you to introduce new interfaces (and a
+corresponding implementation with trait) to any user-defined class. For example, you could use an introduction to
+make all Data Transfer Objects implement an Serializable interface, to simplify persistence.</li>
+<li><strong>Weaving</strong>: Linking aspects with other application types or objects to create an advised object. This can be done at
+any time: compile time, load time, or at runtime.
+Go! performs weaving at runtime and doesn&#8217;t require any additional steps to transform the source code.</li>
+</ul>
 
 
-<p><a class="next" href="../initial-configuration/">Initial configuration &rarr;</a></p>
+<h2>Types of advice</h2>
+
+<ul>
+<li><strong>Before</strong> advice: Advice that executes before a join point, but which does not have the ability to prevent execution
+flow proceeding to the join point (unless it throws an exception).</li>
+<li><strong>After returning</strong> advice: Advice to be executed after a join point completes normally: for example, if a method
+returns without throwing an exception.</li>
+<li><strong>After throwing</strong> advice: Advice to be executed if a method exits by throwing an exception.</li>
+<li><strong>After (finally)</strong> advice: Advice to be executed regardless of the means by which a join point exits
+(normal or exceptional return).</li>
+<li><strong>Around advice</strong>: Advice that surrounds a join point such as a method invocation. This is the most powerful kind of
+advice. Around advice can perform custom behavior before and after the method invocation. It is also responsible for
+choosing whether to proceed to the join point or to shortcut the advised method execution by returning its own return
+value or throwing an exception.</li>
+</ul>
+
+
+<p><a class="next" href="../installation/">Framework installation &rarr;</a></p>
 
   
     <footer>
@@ -147,13 +158,13 @@
   
 
 
-<time datetime="2013-02-09T00:40:00+04:00" pubdate data-updated="true">Feb 9<span>th</span>, 2013</time>
+<time datetime="2013-02-12T22:04:00+04:00" pubdate data-updated="true">Feb 12<span>th</span>, 2013</time>
         
       </p>
       
         <div class="sharing">
   
-  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://go.aopphp.com/docs/installation/index.html" data-via="lisachenko" data-counturl="http://go.aopphp.com/docs/installation/index.html" >Tweet</a>
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://go.aopphp.com/docs/introduction/index.html" data-via="lisachenko" data-counturl="http://go.aopphp.com/docs/introduction/index.html" >Tweet</a>
   
   
   <div class="g-plusone" data-size="medium"></div>
@@ -238,8 +249,8 @@
       
         
         // var disqus_developer = 1;
-        var disqus_identifier = 'http://go.aopphp.com/docs/installation/index.html';
-        var disqus_url = 'http://go.aopphp.com/docs/installation/index.html';
+        var disqus_identifier = 'http://go.aopphp.com/docs/introduction/index.html';
+        var disqus_url = 'http://go.aopphp.com/docs/introduction/index.html';
         var disqus_script = 'embed.js';
       
     (function () {
