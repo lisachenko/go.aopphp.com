@@ -10,3 +10,4 @@ footer: false
 * [Introduction](introduction/)
 * [Installation](installation/)
 * [Initial configuration](initial-configuration/)
+* [Pointcuts and advice definition](pointcuts-and-advices/)
