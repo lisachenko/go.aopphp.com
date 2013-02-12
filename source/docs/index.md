@@ -7,5 +7,6 @@ sharing: false
 footer: false
 ---
 
+* [Introduction](introduction/)
 * [Installation](installation/)
 * [Initial configuration](initial-configuration/)
