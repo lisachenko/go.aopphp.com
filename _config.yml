@@ -6,7 +6,7 @@ url: http://go.aopphp.com
 title: Go! Aspect-Oriented Framework
 subtitle: Aspect-Oriented Programming in PHP.
 author: Lisachenko Alexander
-simple_search: http://google.com/search
+simple_search: /search/
 
 description:
   Go! library adds Aspect-Oriented paradigm to the PHP.
