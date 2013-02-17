@@ -32,4 +32,8 @@
         <loc>http://go.aopphp.com/robots.txt</loc>
         <lastmod>2013-02-09T00:35:50+04:00</lastmod>
     </url>
+    <url>
+        <loc>http://go.aopphp.com/search/</loc>
+        <lastmod>2013-02-17T22:18:04+04:00</lastmod>
+    </url>
 </urlset>
