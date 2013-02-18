@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: symfony | Go! Aspect-Oriented Framework]]></title>
+  <link href="http://go.aopphp.com/blog/categories/symfony/atom.xml" rel="self"/>
+  <link href="http://go.aopphp.com/"/>
+  <updated>2013-02-18T23:06:31+04:00</updated>
+  <id>http://go.aopphp.com/</id>
+  <author>
+    <name><![CDATA[Lisachenko Alexander]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[SymfonyCampUA-2012 presentation]]></title>
+    <link href="http://go.aopphp.com/blog/2012/12/02/symfonycampua-2012-presentation-about-weaving-of-aspects-with-go-aop-library/"/>
+    <updated>2012-12-02T00:00:00+04:00</updated>
+    <id>http://go.aopphp.com/blog/2012/12/02/symfonycampua-2012-presentation-about-weaving-of-aspects-with-go-aop-library</id>
+    <content type="html"><![CDATA[<iframe src="http://www.slideshare.net/slideshow/embed_code/15487433?rel=0" width="597" height="486" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC;border-width:1px 1px 0;margin-bottom:5px" allowfullscreen webkitallowfullscreen mozallowfullscreen>
+</iframe>
+
+]]></content>
+  </entry>
+  
+</feed>
