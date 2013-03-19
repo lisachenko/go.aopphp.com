@@ -11,6 +11,12 @@
         <lastmod>2013-02-12T22:11:30+04:00</lastmod>
     </url>
     <url>
+        <loc>
+            http://go.aopphp.com/blog/2013/03/19/implementing-fluent-interface-pattern-in-php/
+        </loc>
+        <lastmod>2013-03-19T23:17:13+04:00</lastmod>
+    </url>
+    <url>
         <loc>http://go.aopphp.com/docs/</loc>
         <lastmod>2013-02-12T22:55:23+04:00</lastmod>
     </url>
@@ -32,7 +38,7 @@
     </url>
     <url>
         <loc>http://go.aopphp.com/</loc>
-        <lastmod>2013-02-18T23:03:33+04:00</lastmod>
+        <lastmod>2013-03-19T23:17:13+04:00</lastmod>
     </url>
     <url>
         <loc>http://go.aopphp.com/robots.txt</loc>
@@ -40,6 +46,6 @@
     </url>
     <url>
         <loc>http://go.aopphp.com/search/</loc>
-        <lastmod>2013-02-18T23:03:33+04:00</lastmod>
+        <lastmod>2013-03-19T23:17:13+04:00</lastmod>
     </url>
 </urlset>

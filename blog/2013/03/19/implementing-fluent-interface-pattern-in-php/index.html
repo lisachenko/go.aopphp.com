@@ -1,24 +1,110 @@
-<?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[Go! Aspect-Oriented Framework]]></title>
-  <link href="http://go.aopphp.com/atom.xml" rel="self"/>
-  <link href="http://go.aopphp.com/"/>
-  <updated>2013-03-19T23:17:20+04:00</updated>
-  <id>http://go.aopphp.com/</id>
-  <author>
-    <name><![CDATA[Lisachenko Alexander]]></name>
-    
-  </author>
-  <generator uri="http://octopress.org/">Octopress</generator>
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Implementing reusable fluent interface pattern in PHP with AOP - Go! Aspect-Oriented Framework</title>
+  <meta name="author" content="Lisachenko Alexander">
 
   
-  <entry>
-    <title type="html"><![CDATA[Implementing reusable fluent interface pattern in PHP with AOP]]></title>
-    <link href="http://go.aopphp.com/blog/2013/03/19/implementing-fluent-interface-pattern-in-php/"/>
-    <updated>2013-03-19T22:44:00+04:00</updated>
-    <id>http://go.aopphp.com/blog/2013/03/19/implementing-fluent-interface-pattern-in-php</id>
-    <content type="html"><![CDATA[<p>During software development one of the most important goals is the readability of source code. There are special
+  <meta name="description" content="Fluent interface is an implementation of an object oriented API that aims to provide for more readable code.
+A fluent interface is normally implemented by using method chaining to relay the instruction context of a subsequent call.
+This article describes an implementation of this pattern with the help of AOP techniques.
+">
+  
+  <meta name="keywords" content="fluent interface, pattern, php, aop, method chaining, human interface, readability">
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://go.aopphp.com/blog/2013/03/19/implementing-fluent-interface-pattern-in-php/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="Go! Aspect-Oriented Framework" type="application/atom+xml">
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+<script>
+    (function() {
+        var cx = '000825903632656227906:i6jpaivx5ow';
+        var gcse = document.createElement('script'); gcse.type = 'text/javascript'; gcse.async = true;
+        gcse.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') +
+                '//www.google.com/cse/cse.js?cx=' + cx;
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(gcse, s);
+    })();
+</script>
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-38432506-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Go! Aspect-Oriented Framework</a></h1>
+  
+    <h2>Aspect-Oriented Programming in PHP.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="/search/" method="get">
+  <fieldset role="search">
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+    <li><a href="/">Home</a></li>
+    <li><a href="/docs/">Documentation</a></li>
+    <li><a href="https://github.com/lisachenko/go-aop-php/">Source code</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h2 class="entry-title">Implementing Reusable Fluent Interface Pattern in PHP With AOP</h2>
+    
+    
+      <p class="meta">
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>During software development one of the most important goals is the readability of source code. There are special
 techniques and tips that help us to improve the readability of source code. One of the techniques of improving the
 source code readability is using of fluent interfaces. Let&#8217;s discuss it in this article.</p>
 
@@ -392,48 +478,216 @@ the fluent interface is now easy and sexy :)</p>
 
 <p>No more copying &#8220;return $this&#8221; for hundreds of methods, only pure source code, intuitive FluentInterface and
 implementation of FluentInterface in the form of a simple aspect.</p>
-]]></content>
-  </entry>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
   
-  <entry>
-    <title type="html"><![CDATA[Aspect-Oriented Framework for PHP]]></title>
-    <link href="http://go.aopphp.com/blog/2013/02/11/aspect-oriented-framework-for-php/"/>
-    <updated>2013-02-11T22:55:00+04:00</updated>
-    <id>http://go.aopphp.com/blog/2013/02/11/aspect-oriented-framework-for-php</id>
-    <content type="html"><![CDATA[<p>Go! is a PHP 5.4 framework based on OOP and AOP paradigms and designed by Lisachenko Alexander.
-It allows developers to add support of AOP to every PHP application.</p>
 
-<p>Go! doesn&#8217;t require any PECL-extentions, it neither uses any dark magic of Runkit nor evals, the library doesn&#8217;t use DI-containers.
-The code with weaved aspects is fully readable and native, it can be easily debugged with XDebug.
-You can debug either classes or aspects.
-The main advantage of Go! is that potentially it can be installed in every PHP-application,
-because you don&#8217;t have to change the application source code at all.
-As an example, with the help of 10-20 lines of code we can intercept all the public, protected and static methods in all the classes
-of application and display the name and the arguments of each method during its execution.</p>
+<span class="byline author vcard">Posted by <span class="fn">Lisachenko Alexander</span></span>
 
-<h2>What is AOP?</h2>
+      
 
-<p><a href="http://en.wikipedia.org/wiki/Aspect-oriented_programming">AOP (Aspect-Oriented Programming)</a> is an approach to cross-cutting concerns, where the concerns are designed and implemented
-in a &#8220;modular&#8221; way (that is, with appropriate encapsulation, lack of duplication, etc.), then integrated into all the relevant
-execution points in a succinct and robust way, e.g. through declarative or programmatic means.</p>
 
-<p>In AOP terms, the execution points are called join points, a particular set of them is called a pointcut and the new
-behavior that is executed before, after, or &#8220;around&#8221; a join point is called advice. You can read more about AOP in
-<a href="http://go.aopphp.com/docs/introduction/">Introduction</a> section.</p>
 
-<p>PHP traits can be used to implement some aspect-like functionality.</p>
-]]></content>
-  </entry>
+
+
+
+
+
   
-  <entry>
-    <title type="html"><![CDATA[SymfonyCampUA-2012 presentation]]></title>
-    <link href="http://go.aopphp.com/blog/2012/12/02/symfonycampua-2012-presentation-about-weaving-of-aspects-with-go-aop-library/"/>
-    <updated>2012-12-02T00:00:00+04:00</updated>
-    <id>http://go.aopphp.com/blog/2012/12/02/symfonycampua-2012-presentation-about-weaving-of-aspects-with-go-aop-library</id>
-    <content type="html"><![CDATA[<iframe src="http://www.slideshare.net/slideshow/embed_code/15487433?rel=0" width="597" height="486" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC;border-width:1px 1px 0;margin-bottom:5px" allowfullscreen webkitallowfullscreen mozallowfullscreen>
-</iframe>
 
-]]></content>
-  </entry>
+
+<time datetime="2013-03-19T22:44:00+04:00" pubdate data-updated="true">Mar 19<span>th</span>, 2013</time>
+      
+
+<span class="categories">
   
-</feed>
+    <a class='category' href='/blog/categories/aop/'>aop</a>, <a class='category' href='/blog/categories/pattern/'>pattern</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://go.aopphp.com/blog/2013/03/19/implementing-fluent-interface-pattern-in-php/" data-via="lisachenko" data-counturl="http://go.aopphp.com/blog/2013/03/19/implementing-fluent-interface-pattern-in-php/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2013/02/11/aspect-oriented-framework-for-php/" title="Previous Post: Aspect-Oriented Framework for PHP">&laquo; Aspect-Oriented Framework for PHP</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/03/19/implementing-fluent-interface-pattern-in-php/">Implementing reusable fluent interface pattern in PHP with AOP</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/02/11/aspect-oriented-framework-for-php/">Aspect-Oriented Framework for PHP</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/12/02/symfonycampua-2012-presentation-about-weaving-of-aspects-with-go-aop-library/">SymfonyCampUA-2012 presentation</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>Latest Tweets</h1>
+  <ul id="tweets">
+    <li class="loading">Status updating...</li>
+  </ul>
+  <script type="text/javascript">
+    $.domReady(function(){
+      getTwitterFeed("lisachenko", 4, false);
+    });
+  </script>
+  <script src="/javascripts/twitter.js" type="text/javascript"> </script>
+  
+    <a href="http://twitter.com/lisachenko" class="twitter-follow-button" data-show-count="false">Follow @lisachenko</a>
+  
+</section>
+
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/lisachenko">@lisachenko</a> on GitHub
+  
+  <script type="text/javascript">
+    $.domReady(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'lisachenko',
+            count: 0,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+<section class="googleplus googleplus-hidden">
+  <h1>
+    <a href="https://plus.google.com/112404666490406543209?rel=author">
+      <img src="http://www.google.com/images/icons/ui/gprofile_button-32.png" width="32" height="32">
+      Google+
+    </a>
+  </h1>
+</section>
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Lisachenko Alexander -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'go-aop-php';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://go.aopphp.com/blog/2013/03/19/implementing-fluent-interface-pattern-in-php/';
+        var disqus_url = 'http://go.aopphp.com/blog/2013/03/19/implementing-fluent-interface-pattern-in-php/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>
