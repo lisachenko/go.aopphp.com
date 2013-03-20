@@ -2,9 +2,9 @@
 project_type = :stand_alone
 
 # Publishing paths
-http_path = "/go-aop-php/"
-http_images_path = "/go-aop-php/images"
-http_fonts_path = "/go-aop-php/fonts"
+http_path = "/"
+http_images_path = "/images"
+http_fonts_path = "/fonts"
 css_dir = "public/go-aop-php/stylesheets"
 
 # Local development paths
