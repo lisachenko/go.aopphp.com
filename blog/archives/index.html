@@ -5,13 +5,13 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>Go! Aspect-Oriented Framework</title>
+  <title>Posts Archive - Go! Aspect-Oriented Framework</title>
   <meta name="author" content="Lisachenko Alexander">
 
   
-  <meta name="description" content="Go! library adds Aspect-Oriented paradigm to the PHP. Aspect-Oriented Programming (AOP) complements Object-Oriented Programming (OOP) by providing another way of thinking about program structure. In addition to classes, AOP gives you aspects. Aspects enable modularization of concerns such as transaction management that cut across multiple types and objects. (Such concerns are often termed crosscutting concerns.)">
+  <meta name="description" content="Place where you can find the link to an archive article or look for another posts.">
   
-  <meta name="keywords" content="AOP, PHP, Aspect-Oriented Programming, Hooks, Method Interception, Advice, Invocation, Go! AOP">
+  <meta name="keywords" content="posts archive, link">
 
   <!-- http://t.co/dKP3o1e -->
   <meta name="HandheldFriendly" content="True">
@@ -19,7 +19,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://go.aopphp.com/">
+  <link rel="canonical" href="http://go.aopphp.com/blog/archives/">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <script src="/javascripts/modernizr-2.0.js"></script>
@@ -84,120 +84,70 @@
 </nav>
   <div id="main">
     <div id="content">
-      <div class="blog-index">
+      <div>
+<article role="article">
   
-  
-  
-    <article>
-      
   <header>
-    
-      <h2 class="entry-title"><a href="/blog/2013/03/19/implementing-fluent-interface-pattern-in-php/">Implementing Reusable Fluent Interface Pattern in PHP With AOP</a></h2>
-    
-    
-      <p class="meta">
-        
-         | <a href="/blog/2013/03/19/implementing-fluent-interface-pattern-in-php/#disqus_thread">Comments</a>
-        
-      </p>
-    
+    <h2 class="entry-title">Posts Archive</h2>
   </header>
+  
+  <div id="blog-archives">
 
 
-  <div class="entry-content"><p>During software development one of the most important goals is the readability of source code. There are special
-techniques and tips that help us to improve the readability of source code. One of the techniques of improving the
-source code readability is using of fluent interfaces. Let&#8217;s discuss it in this article.</p>
+
+  
+  <h2>2013</h2>
+
+<article>
+  
+<h1><a href="/blog/2013/03/19/implementing-fluent-interface-pattern-in-php/">Implementing reusable fluent interface pattern in PHP with AOP</a></h1>
+<time datetime="2013-03-19T22:44:00+04:00" pubdate><span class='month'>Mar</span> <span class='day'>19</span> <span class='year'>2013</span></time>
+
+<footer>
+  <span class="categories">posted in <a class='category' href='/blog/categories/aop/'>aop</a>, <a class='category' href='/blog/categories/pattern/'>pattern</a></span>
+</footer>
+
+
+</article>
+
+
+
+<article>
+  
+<h1><a href="/blog/2013/02/11/aspect-oriented-framework-for-php/">Aspect-Oriented Framework for PHP</a></h1>
+<time datetime="2013-02-11T22:55:00+04:00" pubdate><span class='month'>Feb</span> <span class='day'>11</span> <span class='year'>2013</span></time>
+
+<footer>
+  <span class="categories">posted in <a class='category' href='/blog/categories/aop/'>aop</a>, <a class='category' href='/blog/categories/framework/'>framework</a>, <a class='category' href='/blog/categories/php/'>php</a></span>
+</footer>
+
+
+</article>
+
+
+
+  
+  <h2>2012</h2>
+
+<article>
+  
+<h1><a href="/blog/2012/12/02/symfonycampua-2012-presentation-about-weaving-of-aspects-with-go-aop-library/">SymfonyCampUA-2012 presentation</a></h1>
+<time datetime="2012-12-02T00:00:00+04:00" pubdate><span class='month'>Dec</span> <span class='day'>02</span> <span class='year'>2012</span></time>
+
+<footer>
+  <span class="categories">posted in <a class='category' href='/blog/categories/aop/'>aop</a>, <a class='category' href='/blog/categories/presentation/'>presentation</a>, <a class='category' href='/blog/categories/refactoring/'>refactoring</a>, <a class='category' href='/blog/categories/symfony/'>symfony</a></span>
+</footer>
+
+
+</article>
 
 </div>
+
   
-  
-    <footer>
-      <a rel="full-article" href="/blog/2013/03/19/implementing-fluent-interface-pattern-in-php/">Read on &rarr;</a>
-    </footer>
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h2 class="entry-title"><a href="/blog/2013/02/11/aspect-oriented-framework-for-php/">Aspect-Oriented Framework for PHP</a></h2>
-    
-    
-      <p class="meta">
-        
-         | <a href="/blog/2013/02/11/aspect-oriented-framework-for-php/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>Go! is a PHP 5.4 framework based on OOP and AOP paradigms and designed by Lisachenko Alexander.
-It allows developers to add support of AOP to every PHP application.</p>
-
-<p>Go! doesn&#8217;t require any PECL-extentions, it neither uses any dark magic of Runkit nor evals, the library doesn&#8217;t use DI-containers.
-The code with weaved aspects is fully readable and native, it can be easily debugged with XDebug.
-You can debug either classes or aspects.
-The main advantage of Go! is that potentially it can be installed in every PHP-application,
-because you don&#8217;t have to change the application source code at all.
-As an example, with the help of 10-20 lines of code we can intercept all the public, protected and static methods in all the classes
-of application and display the name and the arguments of each method during its execution.</p>
-
-<h2>What is AOP?</h2>
-
-<p><a href="http://en.wikipedia.org/wiki/Aspect-oriented_programming">AOP (Aspect-Oriented Programming)</a> is an approach to cross-cutting concerns, where the concerns are designed and implemented
-in a &#8220;modular&#8221; way (that is, with appropriate encapsulation, lack of duplication, etc.), then integrated into all the relevant
-execution points in a succinct and robust way, e.g. through declarative or programmatic means.</p>
-
-<p>In AOP terms, the execution points are called join points, a particular set of them is called a pointcut and the new
-behavior that is executed before, after, or &#8220;around&#8221; a join point is called advice. You can read more about AOP in
-<a href="/docs/introduction/">Introduction</a> section.</p>
-
-<p>PHP traits can be used to implement some aspect-like functionality.</p>
-</div>
-  
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h2 class="entry-title"><a href="/blog/2012/12/02/symfonycampua-2012-presentation-about-weaving-of-aspects-with-go-aop-library/">SymfonyCampUA-2012 Presentation</a></h2>
-    
-    
-      <p class="meta">
-        
-         | <a href="/blog/2012/12/02/symfonycampua-2012-presentation-about-weaving-of-aspects-with-go-aop-library/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><iframe src="http://www.slideshare.net/slideshow/embed_code/15487433?rel=0" width="597" height="486" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC;border-width:1px 1px 0;margin-bottom:5px" allowfullscreen webkitallowfullscreen mozallowfullscreen>
-</iframe>
+</article>
 
 </div>
-  
-  
 
-
-    </article>
-  
-  <div class="pagination">
-    
-    <a href="/blog/archives">Blog Archives</a>
-    
-  </div>
-</div>
 <aside class="sidebar">
   
     <section>
@@ -222,7 +172,7 @@ behavior that is executed before, after, or &#8220;around&#8221; a join point is
 <section>
   <h1>Latest Tweets</h1>
   <ul id="tweets">
-    <li class="loading">Status updating&#8230;</li>
+    <li class="loading">Status updating...</li>
   </ul>
   <script type="text/javascript">
     $.domReady(function(){
@@ -239,7 +189,7 @@ behavior that is executed before, after, or &#8220;around&#8221; a join point is
 <section>
   <h1>GitHub Repos</h1>
   <ul id="gh_repos">
-    <li class="loading">Status updating&#8230;</li>
+    <li class="loading">Status updating...</li>
   </ul>
   
   <a href="https://github.com/lisachenko">@lisachenko</a> on GitHub
@@ -280,6 +230,7 @@ behavior that is executed before, after, or &#8220;around&#8221; a join point is
 
   
 </aside>
+
 
     </div>
   </div>
