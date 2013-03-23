@@ -3,6 +3,7 @@ layout: page
 title: "Pointcuts and advices"
 date: 2013-02-12 22:51
 keywords: pointcut, introduction, advice, ordering, definition, annotation, after throwing, interceptor
+description: Article contains an useful information about types of advices in aspect-oriented programming. You can also found examples for some features, such as advice ordering, class introduction and much more.
 comments: true
 sharing: true
 footer: true
