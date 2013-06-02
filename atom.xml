@@ -4,7 +4,7 @@
   <title><![CDATA[Go! Aspect-Oriented Framework]]></title>
   <link href="http://go.aopphp.com/atom.xml" rel="self"/>
   <link href="http://go.aopphp.com/"/>
-  <updated>2013-06-02T16:53:54+04:00</updated>
+  <updated>2013-06-02T22:06:29+04:00</updated>
   <id>http://go.aopphp.com/</id>
   <author>
     <name><![CDATA[Lisachenko Alexander]]></name>
@@ -76,11 +76,11 @@ AOP</p>
 <blockquote><p>In computer science, an aspect of a program is a feature linked to many other parts of the program, but which is not related to the program&#8217;s primary function.</p></blockquote>
 
 
-<p>Go! frameworks defines aspects as a typical class with methods-advices. Each advice contains a specific logic that can be
+<p>Go! framework defines an aspect as a typical class with methods-advices. Each advice contains a specific logic that can be
 invoked before, after or around specific part of code in your application. Let&rsquo;s try to describe an advice for logging.</p>
 
-<p>Suppose, that we want to log execution of methods. We need to write a method name and an arguments before execution of a method.
-Typically this look like this:</p>
+<p>Suppose, that we want to log an execution of methods. We want to write a method name and an arguments before execution of a method.
+Typically this is looking like this:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -125,7 +125,7 @@ Typically this look like this:</p>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>We can notice that the code addressing the logging is scattered and duplicated. To solve this issue we can extract this code into separate &ldquo;before&rdquo; advice:</p>
+<p>We can notice that the code addressing the logging is scattered and duplicated. To solve this issue we can extract this code into the separate &ldquo;before&rdquo; advice:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -162,7 +162,7 @@ Typically this look like this:</p>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>Ok, we have extracted the advice itself, but how we get a method name and arguments? Go! framework contains a specific class, that implements <code>MethodInvocation</code> interface. This interface give an information about joinpoint by providing an access to the reflection object. Each advice is receiving an instance of this class as an argument:</p>
+<p>Ok, we have extracted the advice itself, but how we get a method name and arguments? Go! framework contains a specific class, that implements <code>MethodInvocation</code> interface. This interface gives an information about joinpoint by providing an access to the reflection object. Each advice is receiving an instance of this class as an argument:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -201,7 +201,7 @@ Typically this look like this:</p>
 
 <p>There is one more question to solve: &ldquo;how to specify concrete methods?&rdquo;. This is known as a pointcut &ndash; the term given to the point of execution in the application at which cross-cutting concern needs to be applied.</p>
 
-<p>Go! frameworks uses annotations for defining pointcuts. Pointcut syntax is like an SQL for the source code. To intercept each public and protected method in the class we can use &ldquo;within&rdquo; pointcut:</p>
+<p>Go! framework uses annotations for defining pointcuts. Pointcut syntax is like an SQL for the source code. To intercept each public and protected method in the class we can use &ldquo;within&rdquo; pointcut:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
