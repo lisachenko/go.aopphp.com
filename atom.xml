@@ -4,7 +4,7 @@
   <title><![CDATA[Go! Aspect-Oriented Framework]]></title>
   <link href="http://go.aopphp.com/atom.xml" rel="self"/>
   <link href="http://go.aopphp.com/"/>
-  <updated>2013-03-23T14:04:40+04:00</updated>
+  <updated>2013-06-02T16:17:48+04:00</updated>
   <id>http://go.aopphp.com/</id>
   <author>
     <name><![CDATA[Lisachenko Alexander]]></name>
@@ -14,29 +14,413 @@
 
   
   <entry>
+    <title type="html"><![CDATA[Application-level logging with AOP and Monolog]]></title>
+    <link href="http://go.aopphp.com/blog/2013/06/02/application-level-logging-with-aop-and-monolog/"/>
+    <updated>2013-06-02T13:50:00+04:00</updated>
+    <id>http://go.aopphp.com/blog/2013/06/02/application-level-logging-with-aop-and-monolog</id>
+    <content type="html"><![CDATA[<p>So you got finished with your brand new website. It is completely PHP driven and looks very nice. But are you sure that
+everything works perfectly? Under every circumstances?</p>
+
+<p>No. You can never be absolutely sure. That is why you need a log file to see if there where some errors. Well, if you
+are the kind of person that doesn’t care if some jerks who behaved wrong on you website get error messages, then you
+probably don’t need an error log file.</p>
+
+<!-- more -->
+
+
+<p>If you decide to to write the logs, then you definitely choose the best tool for this &ndash; <a href="https://github.com/Seldaek/monolog">Monolog</a>.
+Monolog is used by such frameworks as Symfony2, Silex, Laravel4, PPI and can be easily integrated into custom application.</p>
+
+<p>But even such a great tool like Monolog can not help us with encapsulating the logging into separate class, because
+logging is a <a href="http://en.wikipedia.org/wiki/Cross-cutting_concern">cross-cutting concern</a>. This means that logging do not
+fit cleanly into object-oriented programming. As a result, the code addressing the logging must be scattered, or duplicated,
+across the various related locations, resulting in a loss of modularity.</p>
+
+<p>Aspect-oriented programming aims to encapsulate cross-cutting concerns into aspects to retain modularity.
+This allows for the clean isolation and reuse of code addressing the cross-cutting concern. By basing designs on
+cross-cutting concerns, software engineering benefits are effected, including modularity and simplified maintenance.
+This article will show you how to combine the power of AOP with the ease of use of Monolog to implement application-level
+ logging just in few lines.</p>
+
+<h3>Installation</h3>
+
+<p>First of all, we need to install Monolog (if it isn&rsquo;t available). Monolog is available on Packagist (monolog/monolog)
+and as such installable via Composer:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>composer require monolog/monolog
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>If you do not use Composer, you can grab the code of Monolog from GitHub, and use any PSR-0 compatible autoloader
+(e.g. the Symfony2 ClassLoader component) to load Monolog classes.</p>
+
+<p>Next tool that we need is <a href="http://go.aopphp.com">Go! Aspect-Oriented Framework</a>. You can find more information about installation
+and configuration in the <a href="http://go.aopphp.com/docs/">documentation</a> section.</p>
+
+<p>If you use a Composer, then installation is quite easy:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>composer require lisachenko/go-aop-php
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Small configuration is required to prepare the AOP kernel for work. Detailed instructions are
+available <a href="http://go.aopphp.com/docs/initial-configuration/">here</a>. After installation and configuration we are ready for the dark power of
+AOP</p>
+
+<h3>Implementing logging aspect</h3>
+
+<p>So, what is aspect?</p>
+
+<blockquote><p>In computer science, an aspect of a program is a feature linked to many other parts of the program, but which is not related to the program&#8217;s primary function.</p></blockquote>
+
+
+<p>Go! frameworks defines aspects as a typical class with methods-advices. Each advice contains a specific logic that can be
+invoked before, after or around specific part of code in your application. Let&rsquo;s try to describe an advice for logging.</p>
+
+<p>Suppose, that we want to log execution of methods. We need to write a method name and an arguments before execution of a method.
+Typically this look like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="cp">&lt;?php</span>
+</span><span class='line'><span class="k">class</span> <span class="nc">Example</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="sd">/**</span>
+</span><span class='line'><span class="sd">     * Instance of logger (injected in constructor or by setter)</span>
+</span><span class='line'><span class="sd">     */</span>
+</span><span class='line'>    <span class="k">protected</span> <span class="nv">$logger</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="err">    </span><span class="k">public</span> <span class="k">function</span> <span class="nf">test</span><span class="p">(</span><span class="nv">$arg1</span><span class="p">,</span> <span class="nv">$arg2</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">logger</span><span class="o">-&gt;</span><span class="na">info</span><span class="p">(</span><span class="s2">&quot;Executing &quot;</span> <span class="o">.</span> <span class="nx">__METHOD__</span><span class="p">,</span> <span class="nb">func_get_args</span><span class="p">());</span>
+</span><span class='line'>        <span class="c1">// ... logic of method here</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">public</span> <span class="k">function</span> <span class="nf">anotherTest</span><span class="p">(</span><span class="nv">$arg1</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">logger</span><span class="o">-&gt;</span><span class="na">info</span><span class="p">(</span><span class="s2">&quot;Executing &quot;</span> <span class="o">.</span> <span class="nx">__METHOD__</span><span class="p">,</span> <span class="nb">func_get_args</span><span class="p">());</span>
+</span><span class='line'>        <span class="c1">// ... logic of method here</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>We can notice that the code addressing the logging is scattered and duplicated. To solve this issue we can extract this code into separate &ldquo;before&rdquo; advice:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="cp">&lt;?php</span>
+</span><span class='line'><span class="k">use</span> <span class="nx">Go\Aop\Aspect</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">LoggingAspect</span> <span class="k">implements</span> <span class="nx">Aspect</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="sd">/**</span>
+</span><span class='line'><span class="sd">     * Instance of logger (injected in constructor or by setter)</span>
+</span><span class='line'><span class="sd">     */</span>
+</span><span class='line'>    <span class="k">protected</span> <span class="nv">$logger</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">public</span> <span class="k">function</span> <span class="nf">beforeMethodExecution</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">logger</span><span class="o">-&gt;</span><span class="na">info</span><span class="p">(</span><span class="s2">&quot;Executing &quot;</span> <span class="o">.</span> <span class="nx">__METHOD__</span><span class="p">,</span> <span class="nb">func_get_args</span><span class="p">());</span>
+</span><span class='line'>        <span class="c1">// return the control to original code</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Ok, we have extracted the advice itself, but how we get a method name and arguments? Go! framework contains a specific class, that implements <code>MethodInvocation</code> interface. This interface give an information about joinpoint by providing an access to the reflection object. Each advice is receiving an instance of this class as an argument:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="cp">&lt;?php</span>
+</span><span class='line'><span class="k">use</span> <span class="nx">Go\Aop\Aspect</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="nx">Go\Aop\Intercept\MethodInvocation</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">LoggingAspect</span> <span class="k">implements</span> <span class="nx">Aspect</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="sd">/**</span>
+</span><span class='line'><span class="sd">     * Instance of logger (injected in constructor or by setter)</span>
+</span><span class='line'><span class="sd">     */</span>
+</span><span class='line'>    <span class="k">protected</span> <span class="nv">$logger</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">public</span> <span class="k">function</span> <span class="nf">beforeMethodExecution</span><span class="p">(</span><span class="nx">MethodInvocation</span> <span class="nv">$invocation</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">logger</span><span class="o">-&gt;</span><span class="na">info</span><span class="p">(</span><span class="s2">&quot;Executing &quot;</span> <span class="o">.</span> <span class="nv">$invocation</span><span class="o">-&gt;</span><span class="na">getMethod</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">name</span><span class="p">,</span> <span class="nv">$invocation</span><span class="o">-&gt;</span><span class="na">getArguments</span><span class="p">());</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>There is one more question to solve: &ldquo;how to specify concrete methods?&rdquo;. This is known as a pointcut &ndash; the term given to the point of execution in the application at which cross-cutting concern needs to be applied.</p>
+
+<p>Go! frameworks uses annotations for defining pointcuts. Pointcut syntax is like an SQL for the source code. To intercept each public and protected method in the class we can use &ldquo;within&rdquo; pointcut:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="cp">&lt;?php</span>
+</span><span class='line'><span class="k">use</span> <span class="nx">Go\Aop\Aspect</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="nx">Go\Aop\Intercept\MethodInvocation</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="nx">Go\Lang\Annotation\After</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="nx">Go\Lang\Annotation\Before</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="nx">Go\Lang\Annotation\Around</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">LoggingAspect</span> <span class="k">implements</span> <span class="nx">Aspect</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="sd">/**</span>
+</span><span class='line'><span class="sd">     * Instance of logger (injected in constructor or by setter)</span>
+</span><span class='line'><span class="sd">     */</span>
+</span><span class='line'>    <span class="k">protected</span> <span class="nv">$logger</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="sd">/**</span>
+</span><span class='line'><span class="sd">     * @Before(&quot;within(**)&quot;)</span>
+</span><span class='line'><span class="sd">     */</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">function</span> <span class="nf">beforeMethodExecution</span><span class="p">(</span><span class="nx">MethodInvocation</span> <span class="nv">$invocation</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">logger</span><span class="o">-&gt;</span><span class="na">info</span><span class="p">(</span><span class="s2">&quot;Executing &quot;</span> <span class="o">.</span> <span class="nv">$invocation</span><span class="o">-&gt;</span><span class="na">getMethod</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">name</span><span class="p">,</span> <span class="nv">$invocation</span><span class="o">-&gt;</span><span class="na">getArguments</span><span class="p">());</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Pointcut syntax allows many constructions, for example: &ldquo;within(My\Super\Class)&rdquo;, &ldquo;execution(public ClassName-><em>(</em>))&rdquo;, &ldquo;@annotation(Annotation\Class\Name)&rdquo; and more. You can play with pointcuts to look at result )</p>
+
+<p>To register the aspect just add an instance of it in the <code>configureAop()</code> method of the kernel:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="cp">&lt;?php</span>
+</span><span class='line'><span class="c1">// app/ApplicationAspectKernel.php</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">use</span> <span class="nx">LoggingAspect</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">//...</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">protected</span> <span class="k">function</span> <span class="nf">configureAop</span><span class="p">(</span><span class="nx">AspectContainer</span> <span class="nv">$container</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="nv">$container</span><span class="o">-&gt;</span><span class="na">registerAspect</span><span class="p">(</span><span class="k">new</span> <span class="nx">LoggingAspect</span><span class="p">());</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">//...</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>If you don&rsquo;t know how to inject a logger, you can try to initialize it in the aspect constructor:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="cp">&lt;?php</span>
+</span><span class='line'><span class="k">use</span> <span class="nx">Go\Aop\Aspect</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="nx">Go\Aop\Intercept\MethodInvocation</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="nx">Go\Lang\Annotation\After</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="nx">Go\Lang\Annotation\Before</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="nx">Go\Lang\Annotation\Around</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">use</span> <span class="nx">Monolog</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="sd">/**</span>
+</span><span class='line'><span class="sd"> * Logging aspect</span>
+</span><span class='line'><span class="sd"> */</span>
+</span><span class='line'><span class="k">class</span> <span class="nc">LoggingAspect</span> <span class="k">implements</span> <span class="nx">Aspect</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">protected</span> <span class="nv">$logger</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">public</span> <span class="k">function</span> <span class="nf">__construct</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">logger</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Monolog\Logger</span><span class="p">(</span><span class="s1">&#39;test&#39;</span><span class="p">);</span>
+</span><span class='line'>        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">logger</span><span class="o">-&gt;</span><span class="na">pushHandler</span><span class="p">(</span><span class="k">new</span> <span class="nx">Monolog\Handler\StreamHandler</span><span class="p">(</span><span class="s1">&#39;php://output&#39;</span><span class="p">));</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="sd">/**</span>
+</span><span class='line'><span class="sd">     * @Before(&quot;within(**)&quot;)</span>
+</span><span class='line'><span class="sd">     */</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">function</span> <span class="nf">beforeMethodExecution</span><span class="p">(</span><span class="nx">MethodInvocation</span> <span class="nv">$invocation</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="nv">$obj</span>   <span class="o">=</span> <span class="nv">$invocation</span><span class="o">-&gt;</span><span class="na">getThis</span><span class="p">();</span>
+</span><span class='line'>        <span class="nv">$class</span> <span class="o">=</span> <span class="nv">$obj</span> <span class="o">===</span> <span class="p">(</span><span class="nx">object</span><span class="p">)</span><span class="nv">$obj</span> <span class="o">?</span> <span class="nb">get_class</span><span class="p">(</span><span class="nv">$obj</span><span class="p">)</span> <span class="o">:</span> <span class="nv">$obj</span><span class="p">;</span>
+</span><span class='line'>        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">logger</span><span class="o">-&gt;</span><span class="na">info</span><span class="p">(</span><span class="s2">&quot;Executing &quot;</span> <span class="o">.</span> <span class="nv">$class</span><span class="o">.</span><span class="s1">&#39;-&gt;&#39;</span><span class="o">.</span><span class="nv">$invocation</span><span class="o">-&gt;</span><span class="na">getMethod</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">name</span><span class="p">,</span> <span class="nv">$invocation</span><span class="o">-&gt;</span><span class="na">getArguments</span><span class="p">());</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>If you run an application you can get an output like this (example for a Go! <a href="https://github.com/lisachenko/go-aop-php/blob/master/demos/life.php">demo</a>):</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="x">Want to eat something, let&#39;s have a breakfast!&lt;br&gt;</span>
+</span><span class='line'><span class="x">[2013-06-02 11:50:14] test.INFO: Executing Example\Human-&gt;eat [] []</span>
+</span><span class='line'><span class="x">[2013-06-02 11:50:14] test.INFO: Executing Example\Human-&gt;washUp [] []</span>
+</span><span class='line'><span class="x">Washing up...&lt;br&gt;</span>
+</span><span class='line'><span class="x">Eating...&lt;br&gt;</span>
+</span><span class='line'><span class="x">[2013-06-02 11:50:14] test.INFO: Executing Example\Human-&gt;cleanTeeth [] []</span>
+</span><span class='line'><span class="x">Cleaning teeth...&lt;br&gt;</span>
+</span><span class='line'><span class="x">I should work to earn some money&lt;br&gt;</span>
+</span><span class='line'><span class="x">[2013-06-02 11:50:14] test.INFO: Executing Example\Human-&gt;work [] []</span>
+</span><span class='line'><span class="x">Working...&lt;br&gt;</span>
+</span><span class='line'><span class="x">It was a nice day, go to bed&lt;br&gt;</span>
+</span><span class='line'><span class="x">[2013-06-02 11:50:14] test.INFO: Executing Example\Human-&gt;cleanTeeth [] []</span>
+</span><span class='line'><span class="x">Cleaning teeth...&lt;br&gt;</span>
+</span><span class='line'><span class="x">[2013-06-02 11:50:14] test.INFO: Executing Example\Human-&gt;sleep [] []</span>
+</span><span class='line'><span class="x">Go to sleep...&lt;br&gt;</span>
+</span><span class='line'><span class="x">[2013-06-02 11:50:14] test.INFO: Executing Example\User-&gt;setName [&quot;test&quot;] []</span>
+</span><span class='line'><span class="x">[2013-06-02 11:50:14] test.INFO: Executing Example\User-&gt;setSurname [&quot;a&quot;] []</span>
+</span><span class='line'><span class="x">[2013-06-02 11:50:14] test.INFO: Executing Example\User-&gt;setPassword [&quot;root&quot;] []</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>So, we have implemented logging without changes in the original source code! Have a nice experiments!</p>
+]]></content>
+  </entry>
+  
+  <entry>
     <title type="html"><![CDATA[Implementing reusable fluent interface pattern in PHP with AOP]]></title>
     <link href="http://go.aopphp.com/blog/2013/03/19/implementing-fluent-interface-pattern-in-php/"/>
     <updated>2013-03-19T22:44:00+04:00</updated>
     <id>http://go.aopphp.com/blog/2013/03/19/implementing-fluent-interface-pattern-in-php</id>
     <content type="html"><![CDATA[<p>During software development one of the most important goals is the readability of source code. There are special
 techniques and tips that help us to improve the readability of source code. One of the techniques of improving the
-source code readability is using of fluent interfaces. Let&#8217;s discuss it in this article.</p>
+source code readability is using of fluent interfaces. Let&rsquo;s discuss it in this article.</p>
 
 <!-- more -->
 
 
 <h3>Evolution. From simple to complex.</h3>
 
-<p>Every programmer starts with the language by writing a trivial &#8220;Hello, world!&#8221;. After that, it takes several years to
+<p>Every programmer starts with the language by writing a trivial &ldquo;Hello, world!&rdquo;. After that, it takes several years to
 learn the language and to make clumsy attempts to write his own ORM / CMS / Framework (underline one or several). I
 think that everyone has the code which is better to hide. But without understanding of simple things you will not be
-able to understand the complex ones, so let&#8217;s start with a simple example and get to the implementation of the &#8220;fluent&#8221;
+able to understand the complex ones, so let&rsquo;s start with a simple example and get to the implementation of the &ldquo;fluent&rdquo;
 interface as a separate class using AOP. Those who know this pattern can safely move on to the last part of the article,
 where you can get excellent food for thoughts.</p>
 
-<p>Let&#8217;s start!</p>
+<p>Let&rsquo;s start!</p>
 
-<p>Let&#8217;s take a simple user entity, which has the following properties: name, last name and the password:</p>
+<p>Let&rsquo;s take a simple user entity, which has the following properties: name, last name and the password:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -232,24 +616,24 @@ be any object, including the current one.</p>
 
 
 <p>As you can see, the configuration of the object now takes up less space and is much easier to read. We achieved our
-goal! At this point, many developers will ask: &#8220;So what?&#8221; Ok, then try to answer the question: &#8220;What&#8217;s wrong with fluent
-interface in this way?&#8221; before reading the next section.</p>
+goal! At this point, many developers will ask: &ldquo;So what?&rdquo; Ok, then try to answer the question: &ldquo;What&rsquo;s wrong with fluent
+interface in this way?&rdquo; before reading the next section.</p>
 
-<h3>So what&#8217;s bad in it?</h3>
+<h3>So what&rsquo;s bad in it?</h3>
 
-<p>Perhaps you&#8217;ve failed to find an answer and you&#8217;ve decided to read further? ) Well, I can reassure you that it&#8217;s all
-fine with fluent interface in OOP. However, if you think about it, you can find out that it can&#8217;t be implemented as a
-separate class, interface or trait. So it can&#8217;t be reused. This results in the fact that we have to put down &#8220;return
-$this&#8221; at the end of each method to implement fluent interface. If we have a couple dozen classes with a couple dozen
-methods that we want to do &#8220;fluent&#8221; then we have to manually deal with this unpleasant operation.
+<p>Perhaps you&rsquo;ve failed to find an answer and you&rsquo;ve decided to read further? ) Well, I can reassure you that it&rsquo;s all
+fine with fluent interface in OOP. However, if you think about it, you can find out that it can&rsquo;t be implemented as a
+separate class, interface or trait. So it can&rsquo;t be reused. This results in the fact that we have to put down &ldquo;return
+$this&rdquo; at the end of each method to implement fluent interface. If we have a couple dozen classes with a couple dozen
+methods that we want to do &ldquo;fluent&rdquo; then we have to manually deal with this unpleasant operation.
 This is the classic crosscutting.</p>
 
-<h3>Let&#8217;s make it in a separate class</h3>
+<h3>Let&rsquo;s make it in a separate class</h3>
 
 <p>Since we have a crosscutting, we must rise to the level above OOP to describe this pattern. Specification is pretty
 simple: when calling public methods in a class, original object should be returned as the result of the method
-invocation. Of course, we do not want unexpected effects, so let&#8217;s be clear: methods should be public setters starting
-with &#8220;set&#8221; and they should be inside classes that implement FluentInterface marker only . Let&#8217;s describe this with AOP
+invocation. Of course, we do not want unexpected effects, so let&rsquo;s be clear: methods should be public setters starting
+with &ldquo;set&rdquo; and they should be inside classes that implement FluentInterface marker only . Let&rsquo;s describe this with AOP
 and Go! AOP library.</p>
 
 <p>First of all, our marker interface:</p>
@@ -320,9 +704,9 @@ and Go! AOP library.</p>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>Just a quick explanation - &#8220;Around&#8221; advice sets the hook &#8220;around&#8221; the original method and is fully responsible for
+<p>Just a quick explanation &ndash; &ldquo;Around&rdquo; advice sets the hook &ldquo;around&rdquo; the original method and is fully responsible for
 whether the original method will be called or not, and is responsible for the result that will be returned. In the
-advice, we call original method (setter invocation) and if it doesn&#8217;t return anything we just return the original
+advice, we call original method (setter invocation) and if it doesn&rsquo;t return anything we just return the original
 object $invocation->getThis(). That is all ) That is a useful pattern implementation just in a few lines of code. Using
 the fluent interface is now easy and sexy :)</p>
 
@@ -390,7 +774,7 @@ the fluent interface is now easy and sexy :)</p>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>No more copying &#8220;return $this&#8221; for hundreds of methods, only pure source code, intuitive FluentInterface and
+<p>No more copying &ldquo;return $this&rdquo; for hundreds of methods, only pure source code, intuitive FluentInterface and
 implementation of FluentInterface in the form of a simple aspect.</p>
 ]]></content>
   </entry>
@@ -403,22 +787,22 @@ implementation of FluentInterface in the form of a simple aspect.</p>
     <content type="html"><![CDATA[<p>Go! is a PHP 5.4 framework based on OOP and AOP paradigms and designed by Lisachenko Alexander.
 It allows developers to add support of AOP to every PHP application.</p>
 
-<p>Go! doesn&#8217;t require any PECL-extentions, it neither uses any dark magic of Runkit nor evals, the library doesn&#8217;t use DI-containers.
+<p>Go! doesn&rsquo;t require any PECL-extentions, it neither uses any dark magic of Runkit nor evals, the library doesn&rsquo;t use DI-containers.
 The code with weaved aspects is fully readable and native, it can be easily debugged with XDebug.
 You can debug either classes or aspects.
 The main advantage of Go! is that potentially it can be installed in every PHP-application,
-because you don&#8217;t have to change the application source code at all.
+because you don&rsquo;t have to change the application source code at all.
 As an example, with the help of 10-20 lines of code we can intercept all the public, protected and static methods in all the classes
 of application and display the name and the arguments of each method during its execution.</p>
 
 <h2>What is AOP?</h2>
 
 <p><a href="http://en.wikipedia.org/wiki/Aspect-oriented_programming">AOP (Aspect-Oriented Programming)</a> is an approach to cross-cutting concerns, where the concerns are designed and implemented
-in a &#8220;modular&#8221; way (that is, with appropriate encapsulation, lack of duplication, etc.), then integrated into all the relevant
+in a &ldquo;modular&rdquo; way (that is, with appropriate encapsulation, lack of duplication, etc.), then integrated into all the relevant
 execution points in a succinct and robust way, e.g. through declarative or programmatic means.</p>
 
 <p>In AOP terms, the execution points are called join points, a particular set of them is called a pointcut and the new
-behavior that is executed before, after, or &#8220;around&#8221; a join point is called advice. You can read more about AOP in
+behavior that is executed before, after, or &ldquo;around&rdquo; a join point is called advice. You can read more about AOP in
 <a href="http://go.aopphp.com/docs/introduction/">Introduction</a> section.</p>
 
 <p>PHP traits can be used to implement some aspect-like functionality.</p>

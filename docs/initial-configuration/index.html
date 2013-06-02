@@ -264,8 +264,8 @@ file for registering an autoloader for application classes.</p>
 <h3>4. Create an aspect</h3>
 
 <p>Aspect is the key element of AOP philosophy. And Go! library just uses simple PHP classes for declaring aspects!
-Therefore it&#8217;s possible to use all features of OOP for aspect classes.
-As an example let&#8217;s intercept all the methods and display their names:</p>
+Therefore it&rsquo;s possible to use all features of OOP for aspect classes.
+As an example let&rsquo;s intercept all the methods and display their names:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -346,11 +346,11 @@ As an example let&#8217;s intercept all the methods and display their names:</p>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>Easy, isn&#8217;t it? We declared here that we want to install a hook before the execution of
+<p>Easy, isn&rsquo;t it? We declared here that we want to install a hook before the execution of
 all dynamic public methods in the class Example. This is done with the help of annotation
 <code>@Before("execution(public Example-&gt;*(*))")</code>
 Hooks can be of any types, you will see them later.
-But we doesn&#8217;t change any code in the class Example! I can feel you astonishment now )</p>
+But we doesn&rsquo;t change any code in the class Example! I can feel you astonishment now )</p>
 
 <h3>5. Register the aspect in the aspect kernel</h3>
 
@@ -437,6 +437,10 @@ But we doesn&#8217;t change any code in the class Example! I can feel you astoni
     <section>
   <h1>Recent Posts</h1>
   <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/06/02/application-level-logging-with-aop-and-monolog/">Application-level logging with AOP and Monolog</a>
+      </li>
     
       <li class="post">
         <a href="/blog/2013/03/19/implementing-fluent-interface-pattern-in-php/">Implementing reusable fluent interface pattern in PHP with AOP</a>

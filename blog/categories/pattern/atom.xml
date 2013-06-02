@@ -4,7 +4,7 @@
   <title><![CDATA[Category: pattern | Go! Aspect-Oriented Framework]]></title>
   <link href="http://go.aopphp.com/blog/categories/pattern/atom.xml" rel="self"/>
   <link href="http://go.aopphp.com/"/>
-  <updated>2013-03-23T14:04:40+04:00</updated>
+  <updated>2013-06-02T16:17:48+04:00</updated>
   <id>http://go.aopphp.com/</id>
   <author>
     <name><![CDATA[Lisachenko Alexander]]></name>
@@ -20,23 +20,23 @@
     <id>http://go.aopphp.com/blog/2013/03/19/implementing-fluent-interface-pattern-in-php</id>
     <content type="html"><![CDATA[<p>During software development one of the most important goals is the readability of source code. There are special
 techniques and tips that help us to improve the readability of source code. One of the techniques of improving the
-source code readability is using of fluent interfaces. Let's discuss it in this article.</p>
+source code readability is using of fluent interfaces. Let&rsquo;s discuss it in this article.</p>
 
 <!-- more -->
 
 
 <h3>Evolution. From simple to complex.</h3>
 
-<p>Every programmer starts with the language by writing a trivial "Hello, world!". After that, it takes several years to
+<p>Every programmer starts with the language by writing a trivial &ldquo;Hello, world!&rdquo;. After that, it takes several years to
 learn the language and to make clumsy attempts to write his own ORM / CMS / Framework (underline one or several). I
 think that everyone has the code which is better to hide. But without understanding of simple things you will not be
-able to understand the complex ones, so let's start with a simple example and get to the implementation of the "fluent"
+able to understand the complex ones, so let&rsquo;s start with a simple example and get to the implementation of the &ldquo;fluent&rdquo;
 interface as a separate class using AOP. Those who know this pattern can safely move on to the last part of the article,
 where you can get excellent food for thoughts.</p>
 
-<p>Let's start!</p>
+<p>Let&rsquo;s start!</p>
 
-<p>Let's take a simple user entity, which has the following properties: name, last name and the password:</p>
+<p>Let&rsquo;s take a simple user entity, which has the following properties: name, last name and the password:</p>
 
 <p><code>php
 &lt;?php
@@ -52,9 +52,9 @@ An excellent class that is easy to use:
 &lt;?php
 $user = new User;</p>
 
-<p>$user->name = 'John';
-$user->surname = 'Doe';
-$user->password = 'root';
+<p>$user->name = &lsquo;John&rsquo;;
+$user->surname = &lsquo;Doe&rsquo;;
+$user->password = &lsquo;root&rsquo;;
 ```</p>
 
 <p>It is easy to notice that we have no validation and somebody can set a blank password, which is not very good. In
@@ -97,9 +97,9 @@ For the new class the configuration has changed a little and now we are using se
 &lt;?php
 $user = new User;</p>
 
-<p>$user->setName('John');
-$user->setSurname('Doe');
-$user->setPassword('root');
+<p>$user->setName(&lsquo;John&rsquo;);
+$user->setSurname(&lsquo;Doe&rsquo;);
+$user->setPassword(&lsquo;root&rsquo;);
 ```</p>
 
 <p>Not a big deal, right? But what if we need to set up 20 properties? 30 properties? This code will be flooded with setter
@@ -156,24 +156,24 @@ $user-&gt;setName('John')-&gt;setSurname('Doe')-&gt;setPassword('root');
 </code></p>
 
 <p>As you can see, the configuration of the object now takes up less space and is much easier to read. We achieved our
-goal! At this point, many developers will ask: "So what?" Ok, then try to answer the question: "What's wrong with fluent
-interface in this way?" before reading the next section.</p>
+goal! At this point, many developers will ask: &ldquo;So what?&rdquo; Ok, then try to answer the question: &ldquo;What&rsquo;s wrong with fluent
+interface in this way?&rdquo; before reading the next section.</p>
 
-<h3>So what's bad in it?</h3>
+<h3>So what&rsquo;s bad in it?</h3>
 
-<p>Perhaps you've failed to find an answer and you've decided to read further? ) Well, I can reassure you that it's all
-fine with fluent interface in OOP. However, if you think about it, you can find out that it can't be implemented as a
-separate class, interface or trait. So it can't be reused. This results in the fact that we have to put down "return
-$this" at the end of each method to implement fluent interface. If we have a couple dozen classes with a couple dozen
-methods that we want to do "fluent" then we have to manually deal with this unpleasant operation.
+<p>Perhaps you&rsquo;ve failed to find an answer and you&rsquo;ve decided to read further? ) Well, I can reassure you that it&rsquo;s all
+fine with fluent interface in OOP. However, if you think about it, you can find out that it can&rsquo;t be implemented as a
+separate class, interface or trait. So it can&rsquo;t be reused. This results in the fact that we have to put down &ldquo;return
+$this&rdquo; at the end of each method to implement fluent interface. If we have a couple dozen classes with a couple dozen
+methods that we want to do &ldquo;fluent&rdquo; then we have to manually deal with this unpleasant operation.
 This is the classic crosscutting.</p>
 
-<h3>Let's make it in a separate class</h3>
+<h3>Let&rsquo;s make it in a separate class</h3>
 
 <p>Since we have a crosscutting, we must rise to the level above OOP to describe this pattern. Specification is pretty
 simple: when calling public methods in a class, original object should be returned as the result of the method
-invocation. Of course, we do not want unexpected effects, so let's be clear: methods should be public setters starting
-with "set" and they should be inside classes that implement FluentInterface marker only . Let's describe this with AOP
+invocation. Of course, we do not want unexpected effects, so let&rsquo;s be clear: methods should be public setters starting
+with &ldquo;set&rdquo; and they should be inside classes that implement FluentInterface marker only . Let&rsquo;s describe this with AOP
 and Go! AOP library.</p>
 
 <p>First of all, our marker interface:</p>
@@ -217,9 +217,9 @@ protected function aroundMethodExecution(MethodInvocation $invocation)
 <p>}
 ```</p>
 
-<p>Just a quick explanation - "Around" advice sets the hook "around" the original method and is fully responsible for
+<p>Just a quick explanation &ndash; &ldquo;Around&rdquo; advice sets the hook &ldquo;around&rdquo; the original method and is fully responsible for
 whether the original method will be called or not, and is responsible for the result that will be returned. In the
-advice, we call original method (setter invocation) and if it doesn't return anything we just return the original
+advice, we call original method (setter invocation) and if it doesn&rsquo;t return anything we just return the original
 object $invocation->getThis(). That is all ) That is a useful pattern implementation just in a few lines of code. Using
 the fluent interface is now easy and sexy :)</p>
 
@@ -260,7 +260,7 @@ And usage:</p>
 $user = new User;
 $user-&gt;setName('John')-&gt;setSurname('Doe')-&gt;setPassword('root');
 </code>
-No more copying "return $this" for hundreds of methods, only pure source code, intuitive FluentInterface and
+No more copying &ldquo;return $this&rdquo; for hundreds of methods, only pure source code, intuitive FluentInterface and
 implementation of FluentInterface in the form of a simple aspect.</p>
 ]]></content>
   </entry>

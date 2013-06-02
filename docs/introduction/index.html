@@ -101,14 +101,14 @@ concerns like a security policy in a disciplined way is difficult and error-pron
 
 <p>Concerns like security cut across the natural units of modularity. For PHP the natural unit of modularity is the class.
 But in PHP crosscutting concerns are not easily turned into classes precisely because they cut across classes, and so
-these aren&#8217;t reusable, they can&#8217;t be refined or inherited, they are spread through out the program in an undisciplined
+these aren&rsquo;t reusable, they can&rsquo;t be refined or inherited, they are spread through out the program in an undisciplined
 way, in short, they are difficult to work with.</p>
 
 <p>Aspect-oriented programming is a way of modularizing crosscutting concerns much like object-oriented programming is a
 way of modularizing common concerns. Go! is an implementation of aspect-oriented programming for PHP.</p>
 
 <p>Go! adds to PHP only a few new constructs: joinpoints, pointcuts, advice, inter-type declarations and aspects.
-Pointcuts and advice dynamically affect program flow, inter-type declarations statically affects a program&#8217;s class
+Pointcuts and advice dynamically affect program flow, inter-type declarations statically affects a program&rsquo;s class
 hierarchy, and aspects encapsulate these new constructs.</p>
 
 <h2>Glossary</h2>
@@ -127,7 +127,7 @@ corresponding implementation with trait) to any user-defined class. For example,
 make all Data Transfer Objects implement an Serializable interface, to simplify persistence.</li>
 <li><strong>Weaving</strong>: Linking aspects with other application types or objects to create an advised object. This can be done at
 any time: compile time, load time, or at runtime.
-Go! performs weaving at runtime and doesn&#8217;t require any additional steps to transform the source code.</li>
+Go! performs weaving at runtime and doesn&rsquo;t require any additional steps to transform the source code.</li>
 </ul>
 
 
@@ -200,6 +200,10 @@ value or throwing an exception.</li>
     <section>
   <h1>Recent Posts</h1>
   <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/06/02/application-level-logging-with-aop-and-monolog/">Application-level logging with AOP and Monolog</a>
+      </li>
     
       <li class="post">
         <a href="/blog/2013/03/19/implementing-fluent-interface-pattern-in-php/">Implementing reusable fluent interface pattern in PHP with AOP</a>

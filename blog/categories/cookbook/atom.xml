@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: cookbook | Go! Aspect-Oriented Framework]]></title>
+  <link href="http://go.aopphp.com/blog/categories/cookbook/atom.xml" rel="self"/>
+  <link href="http://go.aopphp.com/"/>
+  <updated>2013-06-02T16:17:48+04:00</updated>
+  <id>http://go.aopphp.com/</id>
+  <author>
+    <name><![CDATA[Lisachenko Alexander]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Application-level logging with AOP and Monolog]]></title>
+    <link href="http://go.aopphp.com/blog/2013/06/02/application-level-logging-with-aop-and-monolog/"/>
+    <updated>2013-06-02T13:50:00+04:00</updated>
+    <id>http://go.aopphp.com/blog/2013/06/02/application-level-logging-with-aop-and-monolog</id>
+    <content type="html"><![CDATA[<p>So you got finished with your brand new website. It is completely PHP driven and looks very nice. But are you sure that
+everything works perfectly? Under every circumstances?</p>
+
+<p>No. You can never be absolutely sure. That is why you need a log file to see if there where some errors. Well, if you
+are the kind of person that doesn’t care if some jerks who behaved wrong on you website get error messages, then you
+probably don’t need an error log file.</p>
+
+<!-- more -->
+
+
+<p>If you decide to to write the logs, then you definitely choose the best tool for this &ndash; <a href="https://github.com/Seldaek/monolog">Monolog</a>.
+Monolog is used by such frameworks as Symfony2, Silex, Laravel4, PPI and can be easily integrated into custom application.</p>
+
+<p>But even such a great tool like Monolog can not help us with encapsulating the logging into separate class, because
+logging is a <a href="http://en.wikipedia.org/wiki/Cross-cutting_concern">cross-cutting concern</a>. This means that logging do not
+fit cleanly into object-oriented programming. As a result, the code addressing the logging must be scattered, or duplicated,
+across the various related locations, resulting in a loss of modularity.</p>
+
+<p>Aspect-oriented programming aims to encapsulate cross-cutting concerns into aspects to retain modularity.
+This allows for the clean isolation and reuse of code addressing the cross-cutting concern. By basing designs on
+cross-cutting concerns, software engineering benefits are effected, including modularity and simplified maintenance.
+This article will show you how to combine the power of AOP with the ease of use of Monolog to implement application-level
+ logging just in few lines.</p>
+
+<h3>Installation</h3>
+
+<p>First of all, we need to install Monolog (if it isn&rsquo;t available). Monolog is available on Packagist (monolog/monolog)
+and as such installable via Composer:</p>
+
+<p><code>bash
+$ composer require monolog/monolog
+</code></p>
+
+<p>If you do not use Composer, you can grab the code of Monolog from GitHub, and use any PSR-0 compatible autoloader
+(e.g. the Symfony2 ClassLoader component) to load Monolog classes.</p>
+
+<p>Next tool that we need is <a href="http://go.aopphp.com">Go! Aspect-Oriented Framework</a>. You can find more information about installation
+and configuration in the <a href="/docs/">documentation</a> section.</p>
+
+<p>If you use a Composer, then installation is quite easy:</p>
+
+<p><code>bash
+$ composer require lisachenko/go-aop-php
+</code></p>
+
+<p>Small configuration is required to prepare the AOP kernel for work. Detailed instructions are
+available <a href="/docs/initial-configuration/">here</a>. After installation and configuration we are ready for the dark power of
+AOP</p>
+
+<h3>Implementing logging aspect</h3>
+
+<p>So, what is aspect?</p>
+
+<p><blockquote><p>In computer science, an aspect of a program is a feature linked to many other parts of the program, but which is not related to the program&rsquo;s primary function.</p></blockquote></p>
+
+<p>Go! frameworks defines aspects as a typical class with methods-advices. Each advice contains a specific logic that can be
+invoked before, after or around specific part of code in your application. Let&rsquo;s try to describe an advice for logging.</p>
+
+<p>Suppose, that we want to log execution of methods. We need to write a method name and an arguments before execution of a method.
+Typically this look like this:</p>
+
+<p>```php
+&lt;?php
+class Example
+{</p>
+
+<pre><code>/**
+ * Instance of logger (injected in constructor or by setter)
+ */
+protected $logger;
+</code></pre>
+
+<p>    public function test($arg1, $arg2)</p>
+
+<pre><code>{
+    $this-&gt;logger-&gt;info("Executing " . __METHOD__, func_get_args());
+    // ... logic of method here
+}
+
+public function anotherTest($arg1)
+{
+    $this-&gt;logger-&gt;info("Executing " . __METHOD__, func_get_args());
+    // ... logic of method here
+}
+</code></pre>
+
+<p>}
+```</p>
+
+<p>We can notice that the code addressing the logging is scattered and duplicated. To solve this issue we can extract this code into separate &ldquo;before&rdquo; advice:</p>
+
+<p>```php
+&lt;?php
+use Go\Aop\Aspect;</p>
+
+<p>class LoggingAspect implements Aspect
+{</p>
+
+<pre><code>/**
+ * Instance of logger (injected in constructor or by setter)
+ */
+protected $logger;
+
+public function beforeMethodExecution()
+{
+    $this-&gt;logger-&gt;info("Executing " . __METHOD__, func_get_args());
+    // return the control to original code
+}
+</code></pre>
+
+<p>}
+```</p>
+
+<p>Ok, we have extracted the advice itself, but how we get a method name and arguments? Go! framework contains a specific class, that implements <code>MethodInvocation</code> interface. This interface give an information about joinpoint by providing an access to the reflection object. Each advice is receiving an instance of this class as an argument:</p>
+
+<p>```php
+&lt;?php
+use Go\Aop\Aspect;
+use Go\Aop\Intercept\MethodInvocation;</p>
+
+<p>class LoggingAspect implements Aspect
+{</p>
+
+<pre><code>/**
+ * Instance of logger (injected in constructor or by setter)
+ */
+protected $logger;
+
+public function beforeMethodExecution(MethodInvocation $invocation)
+{
+    $this-&gt;logger-&gt;info("Executing " . $invocation-&gt;getMethod()-&gt;name, $invocation-&gt;getArguments());
+}
+</code></pre>
+
+<p>}
+```
+There is one more question to solve: &ldquo;how to specify concrete methods?&rdquo;. This is known as a pointcut &ndash; the term given to the point of execution in the application at which cross-cutting concern needs to be applied.</p>
+
+<p>Go! frameworks uses annotations for defining pointcuts. Pointcut syntax is like an SQL for the source code. To intercept each public and protected method in the class we can use &ldquo;within&rdquo; pointcut:</p>
+
+<p>```php
+&lt;?php
+use Go\Aop\Aspect;
+use Go\Aop\Intercept\MethodInvocation;
+use Go\Lang\Annotation\After;
+use Go\Lang\Annotation\Before;
+use Go\Lang\Annotation\Around;</p>
+
+<p>class LoggingAspect implements Aspect
+{</p>
+
+<pre><code>/**
+ * Instance of logger (injected in constructor or by setter)
+ */
+protected $logger;
+
+/**
+ * @Before("within(**)")
+ */
+public function beforeMethodExecution(MethodInvocation $invocation)
+{
+    $this-&gt;logger-&gt;info("Executing " . $invocation-&gt;getMethod()-&gt;name, $invocation-&gt;getArguments());
+}
+</code></pre>
+
+<p>}
+```</p>
+
+<p>Pointcut syntax allows many constructions, for example: &ldquo;within(My\Super\Class)&rdquo;, &ldquo;execution(public ClassName-><em>(</em>))&rdquo;, &ldquo;@annotation(Annotation\Class\Name)&rdquo; and more. You can play with pointcuts to look at result )</p>
+
+<p>To register the aspect just add an instance of it in the <code>configureAop()</code> method of the kernel:</p>
+
+<p>```php
+&lt;?php
+// app/ApplicationAspectKernel.php</p>
+
+<p>use LoggingAspect;</p>
+
+<p>//&hellip;</p>
+
+<pre><code>protected function configureAop(AspectContainer $container)
+{
+    $container-&gt;registerAspect(new LoggingAspect());
+}
+</code></pre>
+
+<p>//&hellip;
+```</p>
+
+<p>If you don&rsquo;t know how to inject a logger, you can try to initialize it in the aspect constructor:</p>
+
+<p>```php
+&lt;?php
+use Go\Aop\Aspect;
+use Go\Aop\Intercept\MethodInvocation;
+use Go\Lang\Annotation\After;
+use Go\Lang\Annotation\Before;
+use Go\Lang\Annotation\Around;</p>
+
+<p>use Monolog;</p>
+
+<p>/<em>*
+ * Logging aspect
+ </em>/
+class LoggingAspect implements Aspect
+{</p>
+
+<pre><code>protected $logger;
+
+public function __construct()
+{
+    $this-&gt;logger = new Monolog\Logger('test');
+    $this-&gt;logger-&gt;pushHandler(new Monolog\Handler\StreamHandler('php://output'));
+}
+
+/**
+ * @Before("within(**)")
+ */
+public function beforeMethodExecution(MethodInvocation $invocation)
+{
+    $obj   = $invocation-&gt;getThis();
+    $class = $obj === (object)$obj ? get_class($obj) : $obj;
+    $this-&gt;logger-&gt;info("Executing " . $class.'-&gt;'.$invocation-&gt;getMethod()-&gt;name, $invocation-&gt;getArguments());
+}
+</code></pre>
+
+<p>}
+```</p>
+
+<p>If you run an application you can get an output like this (example for a Go! <a href="https://github.com/lisachenko/go-aop-php/blob/master/demos/life.php">demo</a>):
+<code>
+Want to eat something, let's have a breakfast!&lt;br&gt;
+[2013-06-02 11:50:14] test.INFO: Executing Example\Human-&gt;eat [] []
+[2013-06-02 11:50:14] test.INFO: Executing Example\Human-&gt;washUp [] []
+Washing up...&lt;br&gt;
+Eating...&lt;br&gt;
+[2013-06-02 11:50:14] test.INFO: Executing Example\Human-&gt;cleanTeeth [] []
+Cleaning teeth...&lt;br&gt;
+I should work to earn some money&lt;br&gt;
+[2013-06-02 11:50:14] test.INFO: Executing Example\Human-&gt;work [] []
+Working...&lt;br&gt;
+It was a nice day, go to bed&lt;br&gt;
+[2013-06-02 11:50:14] test.INFO: Executing Example\Human-&gt;cleanTeeth [] []
+Cleaning teeth...&lt;br&gt;
+[2013-06-02 11:50:14] test.INFO: Executing Example\Human-&gt;sleep [] []
+Go to sleep...&lt;br&gt;
+[2013-06-02 11:50:14] test.INFO: Executing Example\User-&gt;setName ["test"] []
+[2013-06-02 11:50:14] test.INFO: Executing Example\User-&gt;setSurname ["a"] []
+[2013-06-02 11:50:14] test.INFO: Executing Example\User-&gt;setPassword ["root"] []
+</code></p>
+
+<p>So, we have implemented logging without changes in the original source code! Have a nice experiments!</p>
+]]></content>
+  </entry>
+  
+</feed>
