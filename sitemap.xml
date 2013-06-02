@@ -20,11 +20,11 @@
         <loc>
             http://go.aopphp.com/blog/2013/06/02/application-level-logging-with-aop-and-monolog/
         </loc>
-        <lastmod>2013-06-02T16:17:40+04:00</lastmod>
+        <lastmod>2013-06-02T16:53:45+04:00</lastmod>
     </url>
     <url>
         <loc>http://go.aopphp.com/blog/archives/</loc>
-        <lastmod>2013-06-02T16:17:40+04:00</lastmod>
+        <lastmod>2013-06-02T16:53:45+04:00</lastmod>
     </url>
     <url>
         <loc>http://go.aopphp.com/docs/</loc>
@@ -48,7 +48,7 @@
     </url>
     <url>
         <loc>http://go.aopphp.com/</loc>
-        <lastmod>2013-06-02T16:17:40+04:00</lastmod>
+        <lastmod>2013-06-02T16:53:45+04:00</lastmod>
     </url>
     <url>
         <loc>http://go.aopphp.com/robots.txt</loc>
@@ -56,6 +56,6 @@
     </url>
     <url>
         <loc>http://go.aopphp.com/search/</loc>
-        <lastmod>2013-06-02T16:17:40+04:00</lastmod>
+        <lastmod>2013-06-02T16:53:45+04:00</lastmod>
     </url>
 </urlset>
