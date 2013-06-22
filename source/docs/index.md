@@ -23,3 +23,5 @@ You can go directly to one of the most popular pages:
 * [The Initial configuration](/docs/initial-configuration/) describes the steps to integrate AOP into your application
 * [The Pointcuts and advice definition](/docs/pointcuts-and-advices/) article contains some useful information about
 available advices and pointcuts
+* [The Privileged advices](/docs/privileged-advices/) describes the advanced technique to access private and protected
+members of the target class in the advice body.
