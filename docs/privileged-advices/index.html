@@ -175,7 +175,7 @@ the class’s private data member to perform its logic.</p>
 </span><span class='line'><span class="k">class</span> <span class="nc">PrivilegeTestAspect</span> <span class="k">implements</span> <span class="nx">Aspect</span>
 </span><span class='line'><span class="p">{</span>
 </span><span class='line'>    <span class="sd">/**</span>
-</span><span class='line'><span class="sd">     * @Before(&quot;execution(public TestPrivileged-&gt;method1(*))&quot;, scope=&quot;target&quot;)</span>
+</span><span class='line'><span class="sd">     * @Before(&quot;execution(public TestPrivileged-&gt;method1(*))&quot;)</span>
 </span><span class='line'><span class="sd">     * @param MethodInvocation $invocation</span>
 </span><span class='line'><span class="sd">     */</span>
 </span><span class='line'>    <span class="k">public</span> <span class="k">function</span> <span class="nf">beforeTestMethod1</span><span class="p">(</span><span class="nx">MethodInvocation</span> <span class="nv">$invocation</span><span class="p">)</span>
@@ -220,7 +220,15 @@ without error and behaves as expected:</p>
 <span class='line-number'>13</span>
 <span class='line-number'>14</span>
 <span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
 </pre></td><td class='code'><pre><code class='php'><span class='line'><span class="cp">&lt;?php</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">use</span> <span class="nx">Go\Aop\Aspect</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="nx">Go\Aop\Intercept\MethodInvocation</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="nx">Go\Lang\Annotation\Before</span><span class="p">;</span>
 </span><span class='line'>
 </span><span class='line'><span class="k">class</span> <span class="nc">PrivilegeTestAspect</span> <span class="k">implements</span> <span class="nx">Aspect</span>
 </span><span class='line'><span class="p">{</span>

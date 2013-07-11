@@ -7,7 +7,7 @@ use Go\Lang\Annotation\Before;
 class PrivilegeTestAspect implements Aspect
 {
     /**
-     * @Before("execution(public TestPrivileged->method1(*))", scope="target")
+     * @Before("execution(public TestPrivileged->method1(*))")
      * @param MethodInvocation $invocation
      */
     public function beforeTestMethod1(MethodInvocation $invocation)
