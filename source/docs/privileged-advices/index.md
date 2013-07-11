@@ -42,11 +42,15 @@ If the property is declared as protected, then we will receive a fatal error:
 Fatal error: Cannot access protected property TestPrivileged::$id in ..\PrivilegeTestAspect.php on line 20
 {% endcodeblock %}
 
-If, however, we mark the advice as privileged by specifying the target scope, the code executes
+If, however, we mark the advice as privileged by specifying the target scope (look at the annotation), the code executes
 without error and behaves as expected:
 
 ```php
 <?php
+
+use Go\Aop\Aspect;
+use Go\Aop\Intercept\MethodInvocation;
+use Go\Lang\Annotation\Before;
 
 class PrivilegeTestAspect implements Aspect
 {
