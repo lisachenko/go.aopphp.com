@@ -4,7 +4,7 @@
   <title><![CDATA[Category: cookbook | Go! Aspect-Oriented Framework]]></title>
   <link href="http://go.aopphp.com/blog/categories/cookbook/atom.xml" rel="self"/>
   <link href="http://go.aopphp.com/"/>
-  <updated>2013-07-11T22:26:21+04:00</updated>
+  <updated>2013-07-21T20:10:53+04:00</updated>
   <id>http://go.aopphp.com/</id>
   <author>
     <name><![CDATA[Lisachenko Alexander]]></name>
@@ -12,6 +12,289 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Implementing logging aspect with Doctrine annotations]]></title>
+    <link href="http://go.aopphp.com/blog/2013/07/21/implementing-logging-aspect-with-doctrine-annotations/"/>
+    <updated>2013-07-21T22:38:00+04:00</updated>
+    <id>http://go.aopphp.com/blog/2013/07/21/implementing-logging-aspect-with-doctrine-annotations</id>
+    <content type="html"><![CDATA[<p>Logging is probably the most mentioned sweet example of AOP. Probably because it is the simplest and most straightforward example most people can think of. So I want to show you the easiest ever way to implement logging in PHP with annotations. This article is the second part of my previous article about <a href="/blog/2013/06/02/application-level-logging-with-aop-and-monolog/">application-level logging with AOP in PHP</a> and if you haven&rsquo;t read it yet please do this before proceeding to this article.</p>
+
+<!-- more -->
+
+
+<p>It&rsquo;s not a secret that every business application requires logging of different actions in different places of the code. Why we need this logging? Is it possible not to use it? The answer is obvious. No, we can&rsquo;t, we should write logs to be able to analyze them in case something goes wrong. Logs can give us the answers: what happened, when it happened and why it happened.</p>
+
+<p>Let&rsquo;s have a look at a typical class which is doing some important job for us:</p>
+
+<p>```php
+class Account
+{</p>
+
+<pre><code>protected $amount = 0;
+
+public function depositMoney($amount)
+{
+    $this-&gt;amount += $amount;
+}
+
+public function withdrawMoney($amount)
+{
+    $this-&gt;amount -= $amount;
+}
+</code></pre>
+
+<p>}
+```</p>
+
+<p>Of course, it&rsquo;s the simplest implementation and real class can contain much more lines of code. Suppose that we deployed this code to the production server and after a while our project manager says that sometimes deposit withdrawal is not working. Oops!</p>
+
+<p>Best solution in that case is to add logging to all the important methods to be sure that everything is working as expected. To detect an error we should write log before and after method execution. Then we can look into log and just count pairs &ldquo;before-after&rdquo;. If there isn&rsquo;t &ldquo;after&rdquo; log record then we have an error and corresponding &ldquo;before&rdquo; record will give us an idea why we have this error.</p>
+
+<p>To write the logs we need a logger instance in our class and it&rsquo;s another disadvantage of OOP version of logging. Injecting logger adds a dependency which is not really needed by our class:</p>
+
+<p>```php
+class Account
+{</p>
+
+<pre><code>/**
+ * @var LoggerInterface
+ */
+protected $logger;
+
+public function __construct(LoggerInterface $logger)
+{
+    $this-&gt;logger = $logger;
+}
+
+// source code here
+</code></pre>
+
+<p>}
+```</p>
+
+<p>Cross-cutting concerns such as logging can not be easily extracting on OOP level into the single class and this means that we should add logging to each method:</p>
+
+<p>```php
+class Account
+{</p>
+
+<pre><code>protected $amount = 0;
+
+/**
+ * @var LoggerInterface
+ */
+protected $logger;
+
+public function __construct(LoggerInterface $logger)
+{
+    $this-&gt;logger = $logger;
+}
+
+public function depositMoney($amount)
+{
+    $this-&gt;logger-&gt;info("Preparing to deposit money", array('amount' =&gt; $amount));
+    try {
+        $this-&gt;amount += $amount;
+        $this-&gt;logger-&gt;info("Deposit money successful", array('amount' =&gt; $amount));
+    } catch (Exception $e) {
+        $this-&gt;logger-&gt;info("Deposit money error: " . $e, array('amount' =&gt; $amount));
+        throw $e;
+    }
+}
+
+public function withdrawMoney($amount)
+{
+    $this-&gt;logger-&gt;info("Preparing to withdraw money", array('amount' =&gt; $amount));
+    try {
+        $this-&gt;amount -= $amount;
+        $this-&gt;logger-&gt;info("Withdraw money successful", array('amount' =&gt; $amount));
+    } catch (Exception $e) {
+        $this-&gt;logger-&gt;info("Withdraw money error: " . $e, array('amount' =&gt; $amount));
+        throw $e;
+    }
+}
+</code></pre>
+
+<p>}
+```
+Wow! Logging is so annoying! Instead of single line of useful code we have 6! For each important method! In my previous article we refactored logging to the aspect class:</p>
+
+<p>```php
+use Go\Aop\Aspect;
+use Go\Aop\Intercept\MethodInvocation;
+use Go\Lang\Annotation\After;
+use Go\Lang\Annotation\Before;
+use Go\Lang\Annotation\Around;</p>
+
+<p>class LoggingAspect implements Aspect
+{</p>
+
+<pre><code>/**
+ * Instance of logger (injected in constructor or by setter)
+ */
+protected $logger;
+
+/**
+ * @Before("within(**)")
+ */
+public function beforeMethodExecution(MethodInvocation $invocation)
+{
+    $this-&gt;logger-&gt;info(
+        "Executing " . $invocation-&gt;getMethod()-&gt;name,
+        $invocation-&gt;getArguments()
+    );
+}
+</code></pre>
+
+<p>}
+```</p>
+
+<p>This aspect is cool but it is too global due to the <code>within(**)</code> pointcut that matches all public and protected methods in every class. But what should we do if we want to log only specific methods in the application? We definitely need some markers for loggable methods. In the Java world we can use native annotations to mark the methods, but for PHP there isn&rsquo;t native support for annotations. However, there is a cool <a href="http://docs.doctrine-project.org/projects/doctrine-common/en/latest/reference/annotations.html">Doctrine Annotations</a> library that can be used in our own application to implement doc block annotations.</p>
+
+<p>Let&rsquo;s create an annotation class for @Loggable marker:</p>
+
+<p>```php
+namespace Annotation;</p>
+
+<p>use Doctrine\Common\Annotations\Annotation;</p>
+
+<p>/<em>*
+ * Loggable marker
+ *
+ * @Annotation
+ </em>/
+class Loggable extends Annotation
+{</p>
+
+<p>}
+```</p>
+
+<p>The next step is to register this annotation in the registry of Doctrine (this is only needed if you did not register an autoloader previously):</p>
+
+<p>```php
+use Doctrine\Common\Annotations\AnnotationRegistry;</p>
+
+<p>AnnotationRegistry::registerFile(<strong>DIR</strong> . &lsquo;./Annotation/Loggable.php&rsquo;);
+```</p>
+
+<p>Now we can modify an aspect by writing a pointcut expression that will match only specific methods. A pointcut expression is an expression that specifies where in the code the advice will be applied. With Go! AOP, you can create a pointcut by specifying namespace, class and method attributes among other things. But the easiest way to specify a pointcut for the logging aspect is by matching methods that have a specific <code>Annotation\Loggable</code> annotation marker in the phpDoc-block</p>
+
+<p>```php
+use Go\Aop\Aspect;
+use Go\Aop\Intercept\MethodInvocation;
+use Go\Lang\Annotation\Around;
+use Go\Lang\Annotation\Pointcut;</p>
+
+<p>class LoggingAspect implements Aspect
+{</p>
+
+<pre><code>/**
+ * Instance of logger (injected in constructor or by setter)
+ */
+protected $logger;
+
+/**
+ * @Pointcut("@annotation(Annotation\Loggable)")
+ */
+protected function loggablePointcut() {}
+
+/**
+ * @Around("$this-&gt;loggablePointcut")
+ * @return mixed
+ */
+public function aroundLoggable(MethodInvocation $invocation)
+{
+    $method = $invocation-&gt;getMethod()-&gt;name;
+    $this-&gt;logger-&gt;info("Entering " . $method, $invocation-&gt;getArguments());
+    try {
+        $result = $invocation-&gt;proceed();
+        $this-&gt;logger-&gt;info("Success: " . $method);
+    } catch (Exception $e) {
+        $this-&gt;logger-&gt;error("Error: " . $method . ' details: ' . $e);
+        throw $e;
+    }
+    return $result;
+}
+</code></pre>
+
+<p>}
+```
+Using the annotation means that developers never need to alter the pointcut expression to add or remove methods to the pointcut. A developer only has to add the annotation to a method to have the logging aspect applied. Let&rsquo;s refactor our original class to use only annotation for loggable methods:</p>
+
+<p>```php</p>
+
+<p>use Annotation\Loggable;</p>
+
+<p>class Account
+{</p>
+
+<pre><code>protected $amount = 0;
+
+/**
+ * @var LoggerInterface
+ */
+protected $logger;
+
+public function __construct(LoggerInterface $logger)
+{
+    $this-&gt;logger = $logger;
+}
+
+/**
+ * @Loggable
+ */
+public function depositMoney($amount)
+{
+    $this-&gt;amount += $amount;
+}
+
+/**
+ * @Loggable
+ */
+public function withdrawMoney($amount)
+{
+    $this-&gt;amount -= $amount;
+}
+</code></pre>
+
+<p>}
+```</p>
+
+<p>We can also remove logger dependency, as there is no need in it any more:</p>
+
+<p>```php</p>
+
+<p>use Annotation\Loggable;</p>
+
+<p>class Account
+{</p>
+
+<pre><code>protected $amount = 0;
+
+/**
+ * @Loggable
+ */
+public function depositMoney($amount)
+{
+    $this-&gt;amount += $amount;
+}
+
+/**
+ * @Loggable
+ */
+public function withdrawMoney($amount)
+{
+    $this-&gt;amount -= $amount;
+}
+</code></pre>
+
+<p>}
+```</p>
+
+<p>We just finished our refactoring to use transparent logging with Go! AOP and Doctrine annotations. By having <code>@Loggable</code> marker we still have a good understanding that this method should be logged and have a nice aspect that do logging in one place.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Application-level logging with AOP and Monolog]]></title>
@@ -270,6 +553,258 @@ Go to sleep...&lt;br&gt;
 </code></p>
 
 <p>So, we have implemented logging without changes in the original source code! Have a nice experiments!</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Implementing reusable fluent interface pattern in PHP with AOP]]></title>
+    <link href="http://go.aopphp.com/blog/2013/03/19/implementing-fluent-interface-pattern-in-php/"/>
+    <updated>2013-03-19T22:44:00+04:00</updated>
+    <id>http://go.aopphp.com/blog/2013/03/19/implementing-fluent-interface-pattern-in-php</id>
+    <content type="html"><![CDATA[<p>During software development one of the most important goals is the readability of source code. There are special
+techniques and tips that help us to improve the readability of source code. One of the techniques of improving the
+source code readability is using of fluent interfaces. Let&rsquo;s discuss it in this article.</p>
+
+<!-- more -->
+
+
+<h3>Evolution. From simple to complex.</h3>
+
+<p>Every programmer starts with the language by writing a trivial &ldquo;Hello, world!&rdquo;. After that, it takes several years to
+learn the language and to make clumsy attempts to write his own ORM / CMS / Framework (underline one or several). I
+think that everyone has the code which is better to hide. But without understanding of simple things you will not be
+able to understand the complex ones, so let&rsquo;s start with a simple example and get to the implementation of the &ldquo;fluent&rdquo;
+interface as a separate class using AOP. Those who know this pattern can safely move on to the last part of the article,
+where you can get excellent food for thoughts.</p>
+
+<p>Let&rsquo;s start!</p>
+
+<p>Let&rsquo;s take a simple user entity, which has the following properties: name, last name and the password:</p>
+
+<p><code>php
+&lt;?php
+class User
+{
+    public $name;
+    public $surname;
+    public $password;
+}
+</code>
+An excellent class that is easy to use:
+```php
+&lt;?php
+$user = new User;</p>
+
+<p>$user->name = &lsquo;John&rsquo;;
+$user->surname = &lsquo;Doe&rsquo;;
+$user->password = &lsquo;root&rsquo;;
+```</p>
+
+<p>It is easy to notice that we have no validation and somebody can set a blank password, which is not very good. In
+addition, it would be nice to know that the field values are immutable. These several considerations lead us to the
+idea that properties should be protected or private and access to them should be carried out with a pair of getter / setter.</p>
+
+<p>Suit the action to the word:
+```php
+&lt;?php
+class User
+{</p>
+
+<pre><code>protected $name;
+protected $surname;
+protected $password;
+
+public function setName($name)
+{
+    $this-&gt;name = $name;
+}
+
+public function setSurname($surname)
+{
+    $this-&gt;surname = $surname;
+}
+
+public function setPassword($password)
+{
+    if (!$password) {
+        throw new InvalidArgumentException("Password shouldn't be empty");
+    }
+    $this-&gt;password = $password;
+}
+</code></pre>
+
+<p>}
+<code>
+For the new class the configuration has changed a little and now we are using setters:
+</code>php
+&lt;?php
+$user = new User;</p>
+
+<p>$user->setName(&lsquo;John&rsquo;);
+$user->setSurname(&lsquo;Doe&rsquo;);
+$user->setPassword(&lsquo;root&rsquo;);
+```</p>
+
+<p>Not a big deal, right? But what if we need to set up 20 properties? 30 properties? This code will be flooded with setter
+calls and $user variable references. If the variable name will be $superImportantUser then readability of the source
+code deteriorates further. What can be done to get rid of the copy of the code?</p>
+
+<h3>Fluent interface to the rescue!</h3>
+
+<p>So, we came to the Fluent Interface pattern, which was coined by Eric Evans and Martin Fowler to increase readability of
+source code by simplifying multiple calls to the same object. It is implemented by a chain of methods, transmitting the
+calling context to the following method in the chain. The context is the return value of the method and this value can
+be any object, including the current one.</p>
+
+<p>To implement a fluent interface, we need all the methods-setters to return the current object:
+```php
+&lt;?php
+class User
+{</p>
+
+<pre><code>protected $name;
+protected $surname;
+protected $password;
+
+public function setName($name)
+{
+    $this-&gt;name = $name;
+    return $this;
+}
+
+public function setSurname($surname)
+{
+    $this-&gt;surname = $surname;
+    return $this;
+}
+
+public function setPassword($password)
+{
+    if (!$password) {
+        throw new InvalidArgumentException("Password shouldn't be empty");
+    }
+    $this-&gt;password = $password;
+    return $this;
+}
+</code></pre>
+
+<p>}
+```
+This approach will allow us to make the call chain:</p>
+
+<p><code>php
+&lt;?php
+$user = new User;
+$user-&gt;setName('John')-&gt;setSurname('Doe')-&gt;setPassword('root');
+</code></p>
+
+<p>As you can see, the configuration of the object now takes up less space and is much easier to read. We achieved our
+goal! At this point, many developers will ask: &ldquo;So what?&rdquo; Ok, then try to answer the question: &ldquo;What&rsquo;s wrong with fluent
+interface in this way?&rdquo; before reading the next section.</p>
+
+<h3>So what&rsquo;s bad in it?</h3>
+
+<p>Perhaps you&rsquo;ve failed to find an answer and you&rsquo;ve decided to read further? ) Well, I can reassure you that it&rsquo;s all
+fine with fluent interface in OOP. However, if you think about it, you can find out that it can&rsquo;t be implemented as a
+separate class, interface or trait. So it can&rsquo;t be reused. This results in the fact that we have to put down &ldquo;return
+$this&rdquo; at the end of each method to implement fluent interface. If we have a couple dozen classes with a couple dozen
+methods that we want to do &ldquo;fluent&rdquo; then we have to manually deal with this unpleasant operation.
+This is the classic crosscutting.</p>
+
+<h3>Let&rsquo;s make it in a separate class</h3>
+
+<p>Since we have a crosscutting, we must rise to the level above OOP to describe this pattern. Specification is pretty
+simple: when calling public methods in a class, original object should be returned as the result of the method
+invocation. Of course, we do not want unexpected effects, so let&rsquo;s be clear: methods should be public setters starting
+with &ldquo;set&rdquo; and they should be inside classes that implement FluentInterface marker only . Let&rsquo;s describe this with AOP
+and Go! AOP library.</p>
+
+<p>First of all, our marker interface:</p>
+
+<p>```php
+&lt;?php
+/<em>*
+ * Fluent interface marker
+ </em>/
+interface FluentInterface
+{</p>
+
+<p>}
+```
+Fluent interface implementation in the form of advice within aspect:</p>
+
+<p>```php
+&lt;?php
+use Go\Aop\Aspect;
+use Go\Aop\Intercept\MethodInvocation;
+use Go\Lang\Annotation\Around;</p>
+
+<p>class FluentInterfaceAspect implements Aspect
+{</p>
+
+<pre><code>/**
+ * Fluent interface advice
+ *
+ * @Around("within(FluentInterface+) &amp;&amp; execution(public **-&gt;set*(*))")
+ *
+ * @param MethodInvocation $invocation
+ * @return mixed|null|object
+ */
+protected function aroundMethodExecution(MethodInvocation $invocation)
+{
+    $result = $invocation-&gt;proceed();
+    return $result!==null ? $result : $invocation-&gt;getThis();
+}
+</code></pre>
+
+<p>}
+```</p>
+
+<p>Just a quick explanation &ndash; &ldquo;Around&rdquo; advice sets the hook &ldquo;around&rdquo; the original method and is fully responsible for
+whether the original method will be called or not, and is responsible for the result that will be returned. In the
+advice, we call original method (setter invocation) and if it doesn&rsquo;t return anything we just return the original
+object $invocation->getThis(). That is all ) That is a useful pattern implementation just in a few lines of code. Using
+the fluent interface is now easy and sexy :)</p>
+
+<p>```php
+&lt;?php
+class User implements FluentInterface
+{</p>
+
+<pre><code>protected $name;
+protected $surname;
+protected $password;
+
+public function setName($name)
+{
+    $this-&gt;name = $name;
+}
+
+public function setSurname($surname)
+{
+    $this-&gt;surname = $surname;
+}
+
+public function setPassword($password)
+{
+    if (!$password) {
+        throw new InvalidArgumentException("Password shouldn't be empty");
+    }
+    $this-&gt;password = $password;
+}
+</code></pre>
+
+<p>}
+```
+And usage:</p>
+
+<p><code>php
+&lt;?php
+$user = new User;
+$user-&gt;setName('John')-&gt;setSurname('Doe')-&gt;setPassword('root');
+</code>
+No more copying &ldquo;return $this&rdquo; for hundreds of methods, only pure source code, intuitive FluentInterface and
+implementation of FluentInterface in the form of a simple aspect.</p>
 ]]></content>
   </entry>
   

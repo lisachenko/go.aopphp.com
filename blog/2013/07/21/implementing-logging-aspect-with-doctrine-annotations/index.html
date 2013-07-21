@@ -1,0 +1,776 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Implementing logging aspect with Doctrine annotations - Go! Aspect-Oriented Framework</title>
+  <meta name="author" content="Lisachenko Alexander">
+
+  
+  <meta name="description" content="Logging is one of the most ubiquitous tasks encountered in PHP. We use logs to track error messages, record important events, and debug problems with our code. In any PHP project, the code is likely to be full of calls to a logging library which handles these actions for us. Unfortunately, having calls to a logging library scattered throughout our code makes the code dependent on the availability of that library, a clear violation of the Dependency Inversion Principle. This article describes the solution to remove this cross-cutting concern into one single place with aspect-oriented programming and Doctrine annotations.
+">
+  
+  <meta name="keywords" content="logging, php, aop, monolog, annotations">
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://go.aopphp.com/blog/2013/07/21/implementing-logging-aspect-with-doctrine-annotations/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="Go! Aspect-Oriented Framework" type="application/atom+xml">
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+<script>
+    (function() {
+        var cx = '000825903632656227906:i6jpaivx5ow';
+        var gcse = document.createElement('script'); gcse.type = 'text/javascript'; gcse.async = true;
+        gcse.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') +
+                '//www.google.com/cse/cse.js?cx=' + cx;
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(gcse, s);
+    })();
+</script>
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-38432506-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Go! Aspect-Oriented Framework</a></h1>
+  
+    <h2>Aspect-Oriented Programming in PHP.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="/search/" method="get">
+  <fieldset role="search">
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+    <li><a href="/">Home</a></li>
+    <li><a href="/docs/">Documentation</a></li>
+</ul>
+
+</nav>
+  <a href="https://github.com/lisachenko/go-aop-php">
+      <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png" alt="Fork me on GitHub">
+  </a>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h2 class="entry-title">Implementing Logging Aspect With Doctrine Annotations</h2>
+    
+    
+      <p class="meta">
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>Logging is probably the most mentioned sweet example of AOP. Probably because it is the simplest and most straightforward example most people can think of. So I want to show you the easiest ever way to implement logging in PHP with annotations. This article is the second part of my previous article about <a href="/blog/2013/06/02/application-level-logging-with-aop-and-monolog/">application-level logging with AOP in PHP</a> and if you haven&rsquo;t read it yet please do this before proceeding to this article.</p>
+
+<!-- more -->
+
+
+<p>It&rsquo;s not a secret that every business application requires logging of different actions in different places of the code. Why we need this logging? Is it possible not to use it? The answer is obvious. No, we can&rsquo;t, we should write logs to be able to analyze them in case something goes wrong. Logs can give us the answers: what happened, when it happened and why it happened.</p>
+
+<p>Let&rsquo;s have a look at a typical class which is doing some important job for us:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="k">class</span> <span class="nc">Account</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">protected</span> <span class="nv">$amount</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">public</span> <span class="k">function</span> <span class="nf">depositMoney</span><span class="p">(</span><span class="nv">$amount</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">amount</span> <span class="o">+=</span> <span class="nv">$amount</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">public</span> <span class="k">function</span> <span class="nf">withdrawMoney</span><span class="p">(</span><span class="nv">$amount</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">amount</span> <span class="o">-=</span> <span class="nv">$amount</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Of course, it&rsquo;s the simplest implementation and real class can contain much more lines of code. Suppose that we deployed this code to the production server and after a while our project manager says that sometimes deposit withdrawal is not working. Oops!</p>
+
+<p>Best solution in that case is to add logging to all the important methods to be sure that everything is working as expected. To detect an error we should write log before and after method execution. Then we can look into log and just count pairs &ldquo;before-after&rdquo;. If there isn&rsquo;t &ldquo;after&rdquo; log record then we have an error and corresponding &ldquo;before&rdquo; record will give us an idea why we have this error.</p>
+
+<p>To write the logs we need a logger instance in our class and it&rsquo;s another disadvantage of OOP version of logging. Injecting logger adds a dependency which is not really needed by our class:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="k">class</span> <span class="nc">Account</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="sd">/**</span>
+</span><span class='line'><span class="sd">     * @var LoggerInterface</span>
+</span><span class='line'><span class="sd">     */</span>
+</span><span class='line'>    <span class="k">protected</span> <span class="nv">$logger</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">public</span> <span class="k">function</span> <span class="nf">__construct</span><span class="p">(</span><span class="nx">LoggerInterface</span> <span class="nv">$logger</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">logger</span> <span class="o">=</span> <span class="nv">$logger</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// source code here</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Cross-cutting concerns such as logging can not be easily extracting on OOP level into the single class and this means that we should add logging to each method:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="k">class</span> <span class="nc">Account</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">protected</span> <span class="nv">$amount</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="sd">/**</span>
+</span><span class='line'><span class="sd">     * @var LoggerInterface</span>
+</span><span class='line'><span class="sd">     */</span>
+</span><span class='line'>    <span class="k">protected</span> <span class="nv">$logger</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">public</span> <span class="k">function</span> <span class="nf">__construct</span><span class="p">(</span><span class="nx">LoggerInterface</span> <span class="nv">$logger</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">logger</span> <span class="o">=</span> <span class="nv">$logger</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">public</span> <span class="k">function</span> <span class="nf">depositMoney</span><span class="p">(</span><span class="nv">$amount</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">logger</span><span class="o">-&gt;</span><span class="na">info</span><span class="p">(</span><span class="s2">&quot;Preparing to deposit money&quot;</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s1">&#39;amount&#39;</span> <span class="o">=&gt;</span> <span class="nv">$amount</span><span class="p">));</span>
+</span><span class='line'>        <span class="k">try</span> <span class="p">{</span>
+</span><span class='line'>            <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">amount</span> <span class="o">+=</span> <span class="nv">$amount</span><span class="p">;</span>
+</span><span class='line'>            <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">logger</span><span class="o">-&gt;</span><span class="na">info</span><span class="p">(</span><span class="s2">&quot;Deposit money successful&quot;</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s1">&#39;amount&#39;</span> <span class="o">=&gt;</span> <span class="nv">$amount</span><span class="p">));</span>
+</span><span class='line'>        <span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="nx">Exception</span> <span class="nv">$e</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>            <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">logger</span><span class="o">-&gt;</span><span class="na">info</span><span class="p">(</span><span class="s2">&quot;Deposit money error: &quot;</span> <span class="o">.</span> <span class="nv">$e</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s1">&#39;amount&#39;</span> <span class="o">=&gt;</span> <span class="nv">$amount</span><span class="p">));</span>
+</span><span class='line'>            <span class="k">throw</span> <span class="nv">$e</span><span class="p">;</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">public</span> <span class="k">function</span> <span class="nf">withdrawMoney</span><span class="p">(</span><span class="nv">$amount</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">logger</span><span class="o">-&gt;</span><span class="na">info</span><span class="p">(</span><span class="s2">&quot;Preparing to withdraw money&quot;</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s1">&#39;amount&#39;</span> <span class="o">=&gt;</span> <span class="nv">$amount</span><span class="p">));</span>
+</span><span class='line'>        <span class="k">try</span> <span class="p">{</span>
+</span><span class='line'>            <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">amount</span> <span class="o">-=</span> <span class="nv">$amount</span><span class="p">;</span>
+</span><span class='line'>            <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">logger</span><span class="o">-&gt;</span><span class="na">info</span><span class="p">(</span><span class="s2">&quot;Withdraw money successful&quot;</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s1">&#39;amount&#39;</span> <span class="o">=&gt;</span> <span class="nv">$amount</span><span class="p">));</span>
+</span><span class='line'>        <span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="nx">Exception</span> <span class="nv">$e</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>            <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">logger</span><span class="o">-&gt;</span><span class="na">info</span><span class="p">(</span><span class="s2">&quot;Withdraw money error: &quot;</span> <span class="o">.</span> <span class="nv">$e</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s1">&#39;amount&#39;</span> <span class="o">=&gt;</span> <span class="nv">$amount</span><span class="p">));</span>
+</span><span class='line'>            <span class="k">throw</span> <span class="nv">$e</span><span class="p">;</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Wow! Logging is so annoying! Instead of single line of useful code we have 6! For each important method! In my previous article we refactored logging to the aspect class:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="k">use</span> <span class="nx">Go\Aop\Aspect</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="nx">Go\Aop\Intercept\MethodInvocation</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="nx">Go\Lang\Annotation\After</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="nx">Go\Lang\Annotation\Before</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="nx">Go\Lang\Annotation\Around</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">LoggingAspect</span> <span class="k">implements</span> <span class="nx">Aspect</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="sd">/**</span>
+</span><span class='line'><span class="sd">     * Instance of logger (injected in constructor or by setter)</span>
+</span><span class='line'><span class="sd">     */</span>
+</span><span class='line'>    <span class="k">protected</span> <span class="nv">$logger</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="sd">/**</span>
+</span><span class='line'><span class="sd">     * @Before(&quot;within(**)&quot;)</span>
+</span><span class='line'><span class="sd">     */</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">function</span> <span class="nf">beforeMethodExecution</span><span class="p">(</span><span class="nx">MethodInvocation</span> <span class="nv">$invocation</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">logger</span><span class="o">-&gt;</span><span class="na">info</span><span class="p">(</span>
+</span><span class='line'>            <span class="s2">&quot;Executing &quot;</span> <span class="o">.</span> <span class="nv">$invocation</span><span class="o">-&gt;</span><span class="na">getMethod</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">name</span><span class="p">,</span>
+</span><span class='line'>            <span class="nv">$invocation</span><span class="o">-&gt;</span><span class="na">getArguments</span><span class="p">()</span>
+</span><span class='line'>        <span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This aspect is cool but it is too global due to the <code>within(**)</code> pointcut that matches all public and protected methods in every class. But what should we do if we want to log only specific methods in the application? We definitely need some markers for loggable methods. In the Java world we can use native annotations to mark the methods, but for PHP there isn&rsquo;t native support for annotations. However, there is a cool <a href="http://docs.doctrine-project.org/projects/doctrine-common/en/latest/reference/annotations.html">Doctrine Annotations</a> library that can be used in our own application to implement doc block annotations.</p>
+
+<p>Let&rsquo;s create an annotation class for @Loggable marker:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="k">namespace</span> <span class="nx">Annotation</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">use</span> <span class="nx">Doctrine\Common\Annotations\Annotation</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="sd">/**</span>
+</span><span class='line'><span class="sd"> * Loggable marker</span>
+</span><span class='line'><span class="sd"> *</span>
+</span><span class='line'><span class="sd"> * @Annotation</span>
+</span><span class='line'><span class="sd"> */</span>
+</span><span class='line'><span class="k">class</span> <span class="nc">Loggable</span> <span class="k">extends</span> <span class="nx">Annotation</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The next step is to register this annotation in the registry of Doctrine (this is only needed if you did not register an autoloader previously):</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="k">use</span> <span class="nx">Doctrine\Common\Annotations\AnnotationRegistry</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">AnnotationRegistry</span><span class="o">::</span><span class="na">registerFile</span><span class="p">(</span><span class="nx">__DIR__</span> <span class="o">.</span> <span class="s1">&#39;./Annotation/Loggable.php&#39;</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now we can modify an aspect by writing a pointcut expression that will match only specific methods. A pointcut expression is an expression that specifies where in the code the advice will be applied. With Go! AOP, you can create a pointcut by specifying namespace, class and method attributes among other things. But the easiest way to specify a pointcut for the logging aspect is by matching methods that have a specific <code>Annotation\Loggable</code> annotation marker in the phpDoc-block</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="k">use</span> <span class="nx">Go\Aop\Aspect</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="nx">Go\Aop\Intercept\MethodInvocation</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="nx">Go\Lang\Annotation\Around</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="nx">Go\Lang\Annotation\Pointcut</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">LoggingAspect</span> <span class="k">implements</span> <span class="nx">Aspect</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="sd">/**</span>
+</span><span class='line'><span class="sd">     * Instance of logger (injected in constructor or by setter)</span>
+</span><span class='line'><span class="sd">     */</span>
+</span><span class='line'>    <span class="k">protected</span> <span class="nv">$logger</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="sd">/**</span>
+</span><span class='line'><span class="sd">     * @Pointcut(&quot;@annotation(Annotation\Loggable)&quot;)</span>
+</span><span class='line'><span class="sd">     */</span>
+</span><span class='line'>    <span class="k">protected</span> <span class="k">function</span> <span class="nf">loggablePointcut</span><span class="p">()</span> <span class="p">{}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="sd">/**</span>
+</span><span class='line'><span class="sd">     * @Around(&quot;$this-&gt;loggablePointcut&quot;)</span>
+</span><span class='line'><span class="sd">     * @return mixed</span>
+</span><span class='line'><span class="sd">     */</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">function</span> <span class="nf">aroundLoggable</span><span class="p">(</span><span class="nx">MethodInvocation</span> <span class="nv">$invocation</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="nv">$method</span> <span class="o">=</span> <span class="nv">$invocation</span><span class="o">-&gt;</span><span class="na">getMethod</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">name</span><span class="p">;</span>
+</span><span class='line'>        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">logger</span><span class="o">-&gt;</span><span class="na">info</span><span class="p">(</span><span class="s2">&quot;Entering &quot;</span> <span class="o">.</span> <span class="nv">$method</span><span class="p">,</span> <span class="nv">$invocation</span><span class="o">-&gt;</span><span class="na">getArguments</span><span class="p">());</span>
+</span><span class='line'>        <span class="k">try</span> <span class="p">{</span>
+</span><span class='line'>            <span class="nv">$result</span> <span class="o">=</span> <span class="nv">$invocation</span><span class="o">-&gt;</span><span class="na">proceed</span><span class="p">();</span>
+</span><span class='line'>            <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">logger</span><span class="o">-&gt;</span><span class="na">info</span><span class="p">(</span><span class="s2">&quot;Success: &quot;</span> <span class="o">.</span> <span class="nv">$method</span><span class="p">);</span>
+</span><span class='line'>        <span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="nx">Exception</span> <span class="nv">$e</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>            <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">logger</span><span class="o">-&gt;</span><span class="na">error</span><span class="p">(</span><span class="s2">&quot;Error: &quot;</span> <span class="o">.</span> <span class="nv">$method</span> <span class="o">.</span> <span class="s1">&#39; details: &#39;</span> <span class="o">.</span> <span class="nv">$e</span><span class="p">);</span>
+</span><span class='line'>            <span class="k">throw</span> <span class="nv">$e</span><span class="p">;</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>        <span class="k">return</span> <span class="nv">$result</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Using the annotation means that developers never need to alter the pointcut expression to add or remove methods to the pointcut. A developer only has to add the annotation to a method to have the logging aspect applied. Let&rsquo;s refactor our original class to use only annotation for loggable methods:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="k">use</span> <span class="nx">Annotation\Loggable</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">Account</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">protected</span> <span class="nv">$amount</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="sd">/**</span>
+</span><span class='line'><span class="sd">     * @var LoggerInterface</span>
+</span><span class='line'><span class="sd">     */</span>
+</span><span class='line'>    <span class="k">protected</span> <span class="nv">$logger</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">public</span> <span class="k">function</span> <span class="nf">__construct</span><span class="p">(</span><span class="nx">LoggerInterface</span> <span class="nv">$logger</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">logger</span> <span class="o">=</span> <span class="nv">$logger</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="sd">/**</span>
+</span><span class='line'><span class="sd">     * @Loggable</span>
+</span><span class='line'><span class="sd">     */</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">function</span> <span class="nf">depositMoney</span><span class="p">(</span><span class="nv">$amount</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">amount</span> <span class="o">+=</span> <span class="nv">$amount</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="sd">/**</span>
+</span><span class='line'><span class="sd">     * @Loggable</span>
+</span><span class='line'><span class="sd">     */</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">function</span> <span class="nf">withdrawMoney</span><span class="p">(</span><span class="nv">$amount</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">amount</span> <span class="o">-=</span> <span class="nv">$amount</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>We can also remove logger dependency, as there is no need in it any more:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="k">use</span> <span class="nx">Annotation\Loggable</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">Account</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">protected</span> <span class="nv">$amount</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="sd">/**</span>
+</span><span class='line'><span class="sd">     * @Loggable</span>
+</span><span class='line'><span class="sd">     */</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">function</span> <span class="nf">depositMoney</span><span class="p">(</span><span class="nv">$amount</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">amount</span> <span class="o">+=</span> <span class="nv">$amount</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="sd">/**</span>
+</span><span class='line'><span class="sd">     * @Loggable</span>
+</span><span class='line'><span class="sd">     */</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">function</span> <span class="nf">withdrawMoney</span><span class="p">(</span><span class="nv">$amount</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">amount</span> <span class="o">-=</span> <span class="nv">$amount</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>We just finished our refactoring to use transparent logging with Go! AOP and Doctrine annotations. By having <code>@Loggable</code> marker we still have a good understanding that this method should be logged and have a nice aspect that do logging in one place.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Lisachenko Alexander</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-07-21T22:38:00+04:00" pubdate data-updated="true">Jul 21<span>st</span>, 2013</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/aop/'>aop</a>, <a class='category' href='/blog/categories/cookbook/'>cookbook</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://go.aopphp.com/blog/2013/07/21/implementing-logging-aspect-with-doctrine-annotations/" data-via="lisachenko" data-counturl="http://go.aopphp.com/blog/2013/07/21/implementing-logging-aspect-with-doctrine-annotations/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2013/06/02/application-level-logging-with-aop-and-monolog/" title="Previous Post: Application-level logging with AOP and Monolog">&laquo; Application-level logging with AOP and Monolog</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/07/21/implementing-logging-aspect-with-doctrine-annotations/">Implementing logging aspect with Doctrine annotations</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/06/02/application-level-logging-with-aop-and-monolog/">Application-level logging with AOP and Monolog</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/03/19/implementing-fluent-interface-pattern-in-php/">Implementing reusable fluent interface pattern in PHP with AOP</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/02/11/aspect-oriented-framework-for-php/">Aspect-Oriented Framework for PHP</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/12/02/symfonycampua-2012-presentation-about-weaving-of-aspects-with-go-aop-library/">SymfonyCampUA-2012 presentation</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>Latest Tweets</h1>
+  <ul id="tweets">
+    <li class="loading">Status updating...</li>
+  </ul>
+  <script type="text/javascript">
+    $.domReady(function(){
+      getTwitterFeed("lisachenko", 4, false);
+    });
+  </script>
+  <script src="/javascripts/twitter.js" type="text/javascript"> </script>
+  
+    <a href="http://twitter.com/lisachenko" class="twitter-follow-button" data-show-count="false">Follow @lisachenko</a>
+  
+</section>
+
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/lisachenko">@lisachenko</a> on GitHub
+  
+  <script type="text/javascript">
+    $.domReady(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'lisachenko',
+            count: 0,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+<section class="googleplus googleplus-hidden">
+  <h1>
+    <a href="https://plus.google.com/112404666490406543209?rel=author">
+      <img src="http://www.google.com/images/icons/ui/gprofile_button-32.png" width="32" height="32">
+      Google+
+    </a>
+  </h1>
+</section>
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Lisachenko Alexander -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'go-aop-php';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://go.aopphp.com/blog/2013/07/21/implementing-logging-aspect-with-doctrine-annotations/';
+        var disqus_url = 'http://go.aopphp.com/blog/2013/07/21/implementing-logging-aspect-with-doctrine-annotations/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

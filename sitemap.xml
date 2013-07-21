@@ -14,7 +14,7 @@
         <loc>
             http://go.aopphp.com/blog/2013/03/19/implementing-fluent-interface-pattern-in-php/
         </loc>
-        <lastmod>2013-06-22T13:25:41+04:00</lastmod>
+        <lastmod>2013-07-20T14:24:31+04:00</lastmod>
     </url>
     <url>
         <loc>
@@ -23,8 +23,14 @@
         <lastmod>2013-06-22T13:25:41+04:00</lastmod>
     </url>
     <url>
+        <loc>
+            http://go.aopphp.com/blog/2013/07/21/implementing-logging-aspect-with-doctrine-annotations/
+        </loc>
+        <lastmod>2013-07-21T19:57:20+04:00</lastmod>
+    </url>
+    <url>
         <loc>http://go.aopphp.com/blog/archives/</loc>
-        <lastmod>2013-06-22T13:25:41+04:00</lastmod>
+        <lastmod>2013-07-21T19:57:20+04:00</lastmod>
     </url>
     <url>
         <loc>http://go.aopphp.com/docs/</loc>
@@ -48,11 +54,11 @@
     </url>
     <url>
         <loc>http://go.aopphp.com/docs/privileged-advices/</loc>
-        <lastmod>2013-07-11T22:24:27+04:00</lastmod>
+        <lastmod>2013-07-11T22:28:44+04:00</lastmod>
     </url>
     <url>
         <loc>http://go.aopphp.com/</loc>
-        <lastmod>2013-06-22T13:25:41+04:00</lastmod>
+        <lastmod>2013-07-21T19:57:20+04:00</lastmod>
     </url>
     <url>
         <loc>http://go.aopphp.com/robots.txt</loc>
@@ -60,6 +66,6 @@
     </url>
     <url>
         <loc>http://go.aopphp.com/search/</loc>
-        <lastmod>2013-06-22T13:25:41+04:00</lastmod>
+        <lastmod>2013-07-21T19:57:20+04:00</lastmod>
     </url>
 </urlset>
