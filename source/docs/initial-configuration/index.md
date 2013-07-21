@@ -129,7 +129,7 @@ all dynamic public methods in the class Example. This is done with the help of a
 Hooks can be of any types, you will see them later.
 But we doesn't change any code in the class Example! I can feel you astonishment now )
 
-### 5. Register the aspect in the aspect kernel
+### 4. Register the aspect in the aspect kernel
 
 To register the aspect just add an instance of it in the `configureAop()` method of the kernel:
 
