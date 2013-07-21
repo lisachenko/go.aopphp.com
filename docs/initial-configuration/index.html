@@ -100,7 +100,6 @@ aspect-oriented programming in application
 <ol>
 <li>Create an application aspect kernel</li>
 <li>Configure the aspect kernel in the front controller</li>
-<li>Adjust the front controller of your application for proxying autoloading requests to the aspect kernel</li>
 <li>Create an aspect</li>
 <li>Register the aspect in the aspect kernel</li>
 </ol>
@@ -139,17 +138,7 @@ To create your application kernel extend the abstract class <code>Go\Core\Aspect
 <span class='line-number'>21</span>
 <span class='line-number'>22</span>
 <span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="cp">&lt;?php</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="o">&lt;?</span><span class="nx">php</span>
 </span><span class='line'><span class="c1">// app/ApplicationAspectKernel.php</span>
 </span><span class='line'>
 </span><span class='line'><span class="k">use</span> <span class="nx">Go\Core\AspectKernel</span><span class="p">;</span>
@@ -160,16 +149,6 @@ To create your application kernel extend the abstract class <code>Go\Core\Aspect
 </span><span class='line'><span class="sd"> */</span>
 </span><span class='line'><span class="k">class</span> <span class="nc">ApplicationAspectKernel</span> <span class="k">extends</span> <span class="nx">AspectKernel</span>
 </span><span class='line'><span class="p">{</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="sd">/**</span>
-</span><span class='line'><span class="sd">     * Returns the path to the application autoloader file, typical autoload.php</span>
-</span><span class='line'><span class="sd">     *</span>
-</span><span class='line'><span class="sd">     * @return string</span>
-</span><span class='line'><span class="sd">     */</span>
-</span><span class='line'>    <span class="k">protected</span> <span class="k">function</span> <span class="nf">getApplicationLoaderPath</span><span class="p">()</span>
-</span><span class='line'>    <span class="p">{</span>
-</span><span class='line'>        <span class="k">return</span> <span class="nx">__DIR__</span> <span class="o">.</span> <span class="s1">&#39;/autoload.php&#39;</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
 </span><span class='line'>
 </span><span class='line'>    <span class="sd">/**</span>
 </span><span class='line'><span class="sd">     * Configure an AspectContainer with advisors, aspects and pointcuts</span>
@@ -184,10 +163,6 @@ To create your application kernel extend the abstract class <code>Go\Core\Aspect
 </span><span class='line'><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
-
-<p>Look at the method <code>getApplicationLoaderPath()</code>. It must return the path to the application
-loader file, typically <code>autoload.php</code> or <code>bootstrap.php</code>. Aspect kernel will delegate control to that
-file for registering an autoloader for application classes.</p>
 
 <h3>2. Configure the aspect kernel in the front controller</h3>
 
@@ -207,37 +182,15 @@ file for registering an autoloader for application classes.</p>
 <span class='line-number'>12</span>
 <span class='line-number'>13</span>
 <span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="cp">&lt;?php</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="o">&lt;?</span><span class="nx">php</span>
 </span><span class='line'><span class="c1">// front-controller, for Symfony2 application it&#39;s web/app_dev.php</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// Do not use application autoloader for the following files</span>
-</span><span class='line'><span class="k">include</span> <span class="nx">__DIR__</span> <span class="o">.</span> <span class="s1">&#39;/../vendor/lisachenko/go-aop-php/src/Go/Core/AspectKernel.php&#39;</span><span class="p">;</span>
-</span><span class='line'><span class="k">include</span> <span class="nx">__DIR__</span> <span class="o">.</span> <span class="s1">&#39;/../app/ApplicationAspectKernel.php&#39;</span><span class="p">;</span>
 </span><span class='line'>
 </span><span class='line'><span class="c1">// Initialize an application aspect container</span>
 </span><span class='line'><span class="nv">$applicationAspectKernel</span> <span class="o">=</span> <span class="nx">ApplicationAspectKernel</span><span class="o">::</span><span class="na">getInstance</span><span class="p">();</span>
 </span><span class='line'><span class="nv">$applicationAspectKernel</span><span class="o">-&gt;</span><span class="na">init</span><span class="p">(</span><span class="k">array</span><span class="p">(</span>
-</span><span class='line'>        <span class="c1">// Configuration for autoload namespaces</span>
-</span><span class='line'>        <span class="s1">&#39;autoload&#39;</span> <span class="o">=&gt;</span> <span class="k">array</span><span class="p">(</span>
-</span><span class='line'>            <span class="s1">&#39;Go&#39;</span>               <span class="o">=&gt;</span> <span class="nb">realpath</span><span class="p">(</span><span class="nx">__DIR__</span> <span class="o">.</span> <span class="s1">&#39;/../vendor/lisachenko/go-aop-php/src/&#39;</span><span class="p">),</span>
-</span><span class='line'>            <span class="s1">&#39;TokenReflection&#39;</span>  <span class="o">=&gt;</span> <span class="nb">realpath</span><span class="p">(</span><span class="nx">__DIR__</span> <span class="o">.</span> <span class="s1">&#39;/../vendor/andrewsville/php-token-reflection/&#39;</span><span class="p">),</span>
-</span><span class='line'>            <span class="s1">&#39;Doctrine\\Common&#39;</span> <span class="o">=&gt;</span> <span class="nb">realpath</span><span class="p">(</span><span class="nx">__DIR__</span> <span class="o">.</span> <span class="s1">&#39;/../vendor/doctrine/common/lib/&#39;</span><span class="p">)</span>
-</span><span class='line'>        <span class="p">),</span>
-</span><span class='line'>        <span class="c1">// Application root directory</span>
-</span><span class='line'>        <span class="s1">&#39;appDir&#39;</span> <span class="o">=&gt;</span> <span class="nx">__DIR__</span> <span class="o">.</span> <span class="s1">&#39;/../&#39;</span><span class="p">,</span>
-</span><span class='line'>        <span class="c1">// Cache directory should be disabled for now</span>
-</span><span class='line'>        <span class="s1">&#39;cacheDir&#39;</span> <span class="o">=&gt;</span> <span class="k">null</span><span class="p">,</span>
+</span><span class='line'>        <span class="s1">&#39;debug&#39;</span> <span class="o">=&gt;</span> <span class="k">true</span><span class="p">,</span> <span class="c1">// Use &#39;false&#39; for production mode</span>
+</span><span class='line'>        <span class="c1">// Cache directory</span>
+</span><span class='line'>        <span class="s1">&#39;cacheDir&#39;</span> <span class="o">=&gt;</span> <span class="nx">__DIR__</span> <span class="o">.</span> <span class="s1">&#39;./../cache/&#39;</span><span class="p">,</span> <span class="c1">// Adjust this path if needed</span>
 </span><span class='line'>        <span class="c1">// Include paths restricts the directories where aspects should be applied, or empty for all source files</span>
 </span><span class='line'>        <span class="s1">&#39;includePaths&#39;</span> <span class="o">=&gt;</span> <span class="k">array</span><span class="p">(</span>
 </span><span class='line'>            <span class="nx">__DIR__</span> <span class="o">.</span> <span class="s1">&#39;/../src/&#39;</span>
@@ -246,24 +199,7 @@ file for registering an autoloader for application classes.</p>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<h3>3. Adjust the front controller of your application for proxying autoloading requests to the aspect kernel</h3>
-
-<p>At this step we have a configured aspect kernel and can try to switch to it instead of default autoloader:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="x">// front-controller, for Symfony2 application it&#39;s web/app_dev.php</span>
-</span><span class='line'>
-</span><span class='line'><span class="x">// Comment default loader of application at the top of file</span>
-</span><span class='line'><span class="x">// include __DIR__ .&#39;/../vendor/autoload.php&#39;; // for composer</span>
-</span><span class='line'><span class="x">// include __DIR__ .&#39;/../app/autoload.php&#39;;  // for old applications</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>4. Create an aspect</h3>
+<h3>3. Create an aspect</h3>
 
 <p>Aspect is the key element of AOP philosophy. And Go! library just uses simple PHP classes for declaring aspects!
 Therefore it&rsquo;s possible to use all features of OOP for aspect classes.
