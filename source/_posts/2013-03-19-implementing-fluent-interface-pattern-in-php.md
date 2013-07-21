@@ -3,7 +3,7 @@ layout: post
 title: "Implementing reusable fluent interface pattern in PHP with AOP"
 date: 2013-03-19 22:44
 comments: true
-categories: aop pattern
+categories: aop pattern cookbook
 keywords: fluent interface, pattern, php, aop, method chaining, human interface, readability
 description: |
     Fluent interface is an implementation of an object oriented API that aims to provide for more readable code.
