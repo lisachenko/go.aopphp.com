@@ -43,7 +43,8 @@ git submodule add https://github.com/lisachenko/go-aop-php vendor/lisachenko/go-
 Dependencies should be also installed as submodules:
 ```bash
 git submodule add https://github.com/Andrewsville/PHP-Token-Reflection vendor/andrewsville/php-token-reflection
-git submodule add https://github.com/doctrine/common vendor/doctrine/common
+git submodule add https://github.com/doctrine/common vendor/doctrine/common (use 2.3.x tags)
+git submodule add https://github.com/jakubledl/dissect vendor/jakubledl/dissect
 ```
 
 <a class="next" href="../initial-configuration/">Initial configuration &rarr;</a>

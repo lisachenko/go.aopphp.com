@@ -16,9 +16,8 @@ Initial configuration consists of several steps:
 
 1. Create an application aspect kernel
 2. Configure the aspect kernel in the front controller
-3. Adjust the front controller of your application for proxying autoloading requests to the aspect kernel
-4. Create an aspect
-5. Register the aspect in the aspect kernel
+3. Create an aspect
+4. Register the aspect in the aspect kernel
 
 ### Step 1: Create an application aspect kernel
 
@@ -44,16 +43,6 @@ class ApplicationAspectKernel extends AspectKernel
 {
 
     /**
-     * Returns the path to the application autoloader file, typical autoload.php
-     *
-     * @return string
-     */
-    protected function getApplicationLoaderPath()
-    {
-        return __DIR__ . '/autoload.php';
-    }
-
-    /**
      * Configure an AspectContainer with advisors, aspects and pointcuts
      *
      * @param AspectContainer $container
@@ -66,10 +55,6 @@ class ApplicationAspectKernel extends AspectKernel
 }
 ```
 
-Look at the method `getApplicationLoaderPath()`. It must return the path to the application
-loader file, typically `autoload.php` or `bootstrap.php`. Aspect kernel will delegate control to that
-file for registering an autoloader for application classes.
-
 ### 2. Configure the aspect kernel in the front controller
 
 To configure the aspect kernel, call `init()` method of kernel instance.
@@ -78,23 +63,12 @@ To configure the aspect kernel, call `init()` method of kernel instance.
 <?php
 // front-controller, for Symfony2 application it's web/app_dev.php
 
-// Do not use application autoloader for the following files
-include __DIR__ . '/../vendor/lisachenko/go-aop-php/src/Go/Core/AspectKernel.php';
-include __DIR__ . '/../app/ApplicationAspectKernel.php';
-
 // Initialize an application aspect container
 $applicationAspectKernel = ApplicationAspectKernel::getInstance();
 $applicationAspectKernel->init(array(
-        // Configuration for autoload namespaces
-        'autoload' => array(
-            'Go'               => realpath(__DIR__ . '/../vendor/lisachenko/go-aop-php/src/'),
-            'TokenReflection'  => realpath(__DIR__ . '/../vendor/andrewsville/php-token-reflection/'),
-            'Doctrine\\Common' => realpath(__DIR__ . '/../vendor/doctrine/common/lib/')
-        ),
-        // Application root directory
-        'appDir' => __DIR__ . '/../',
-        // Cache directory should be disabled for now
-        'cacheDir' => null,
+        'debug' => true, // Use 'false' for production mode
+        // Cache directory
+        'cacheDir' => __DIR__ . './../cache/', // Adjust this path if needed
         // Include paths restricts the directories where aspects should be applied, or empty for all source files
         'includePaths' => array(
             __DIR__ . '/../src/'
@@ -102,19 +76,7 @@ $applicationAspectKernel->init(array(
 ));
 ```
 
-### 3. Adjust the front controller of your application for proxying autoloading requests to the aspect kernel
-
-At this step we have a configured aspect kernel and can try to switch to it instead of default autoloader:
-
-```php
-// front-controller, for Symfony2 application it's web/app_dev.php
-
-// Comment default loader of application at the top of file
-// include __DIR__ .'/../vendor/autoload.php'; // for composer
-// include __DIR__ .'/../app/autoload.php';  // for old applications
-```
-
-### 4. Create an aspect
+### 3. Create an aspect
 
 Aspect is the key element of AOP philosophy. And Go! library just uses simple PHP classes for declaring aspects!
 Therefore it's possible to use all features of OOP for aspect classes.
