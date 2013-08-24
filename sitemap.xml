@@ -29,8 +29,14 @@
         <lastmod>2013-07-21T19:57:20+04:00</lastmod>
     </url>
     <url>
+        <loc>
+            http://go.aopphp.com/blog/2013/08/24/intercepting-execution-of-system-functions-in-php/
+        </loc>
+        <lastmod>2013-08-24T19:04:50+04:00</lastmod>
+    </url>
+    <url>
         <loc>http://go.aopphp.com/blog/archives/</loc>
-        <lastmod>2013-07-21T19:57:20+04:00</lastmod>
+        <lastmod>2013-08-24T19:04:50+04:00</lastmod>
     </url>
     <url>
         <loc>http://go.aopphp.com/docs/</loc>
@@ -58,7 +64,7 @@
     </url>
     <url>
         <loc>http://go.aopphp.com/</loc>
-        <lastmod>2013-07-21T19:57:20+04:00</lastmod>
+        <lastmod>2013-08-24T19:04:50+04:00</lastmod>
     </url>
     <url>
         <loc>http://go.aopphp.com/robots.txt</loc>
@@ -66,6 +72,6 @@
     </url>
     <url>
         <loc>http://go.aopphp.com/search/</loc>
-        <lastmod>2013-07-21T19:57:20+04:00</lastmod>
+        <lastmod>2013-08-24T19:04:50+04:00</lastmod>
     </url>
 </urlset>

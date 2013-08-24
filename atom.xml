@@ -4,7 +4,7 @@
   <title><![CDATA[Go! Aspect-Oriented Framework]]></title>
   <link href="http://go.aopphp.com/atom.xml" rel="self"/>
   <link href="http://go.aopphp.com/"/>
-  <updated>2013-07-21T21:54:59+04:00</updated>
+  <updated>2013-08-24T19:04:57+04:00</updated>
   <id>http://go.aopphp.com/</id>
   <author>
     <name><![CDATA[Lisachenko Alexander]]></name>
@@ -12,6 +12,277 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Intercepting execution of system functions in PHP]]></title>
+    <link href="http://go.aopphp.com/blog/2013/08/24/intercepting-execution-of-system-functions-in-php/"/>
+    <updated>2013-08-24T17:00:00+04:00</updated>
+    <id>http://go.aopphp.com/blog/2013/08/24/intercepting-execution-of-system-functions-in-php</id>
+    <content type="html"><![CDATA[<p>Intercepting an execution of methods is one of the most common tasks for AOP. In the Java world there are a lot of articles that has a detailed examples for transactional control, logging, authorization, etc. But all AOP stuff in Java is related only to the classes and objects, because functions are not first-class citizens in Java whereas PHP has a good support for functions. By using some tricks we can create a proxies for system functions and add our own interceptors with custom logic. This article will show you how to use AOP techniques with functions in PHP.</p>
+
+<!-- more -->
+
+
+<p>Ok, let&rsquo;s have some experiments with PHP. Suppose, that we have a nice code that uses the <code>file_get_contents()</code> function to load the content of a file and then prints it to the screen:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="k">namespace</span> <span class="nx">Test</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">FilePrinter</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">function</span> <span class="nf">show</span><span class="p">(</span><span class="nv">$filename</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="k">echo</span> <span class="s1">&#39;&lt;pre&gt;&#39;</span><span class="p">,</span> <span class="nb">htmlspecialchars</span><span class="p">(</span><span class="nb">file_get_contents</span><span class="p">(</span><span class="nv">$filename</span><span class="p">)),</span> <span class="s1">&#39;&lt;/pre&gt;&#39;</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Is it possible to test this class and method? Of course, yes! We can create a unit test that will generate a temporary file and then just check that content is correct:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="k">namespace</span> <span class="nx">Test</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">use</span> <span class="nx">PHPUnit_Framework_TestCase</span> <span class="k">as</span> <span class="nx">TestCase</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">FilePrinterTest</span> <span class="k">extends</span> <span class="nx">TestCase</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">protected</span> <span class="nv">$printer</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">public</span> <span class="k">function</span> <span class="nf">setUp</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">printer</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">FilePrinter</span><span class="p">();</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">public</span> <span class="k">function</span> <span class="nf">testShow</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="nv">$file</span> <span class="o">=</span> <span class="nb">tempnam</span><span class="p">(</span><span class="s2">&quot;/tmp&quot;</span><span class="p">,</span> <span class="s2">&quot;PHP&quot;</span><span class="p">);</span>
+</span><span class='line'>        <span class="nb">file_put_contents</span><span class="p">(</span><span class="nv">$file</span><span class="p">,</span> <span class="s1">&#39;test&#39;</span><span class="p">);</span>
+</span><span class='line'>        <span class="nb">ob_start</span><span class="p">();</span>
+</span><span class='line'>        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">printer</span><span class="o">-&gt;</span><span class="na">show</span><span class="p">(</span><span class="nv">$file</span><span class="p">);</span>
+</span><span class='line'>        <span class="nv">$content</span> <span class="o">=</span> <span class="nb">ob_end_clean</span><span class="p">();</span>
+</span><span class='line'>        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">assertEqual</span><span class="p">(</span><span class="s1">&#39;test&#39;</span><span class="p">,</span> <span class="nv">$content</span><span class="p">);</span>
+</span><span class='line'>        <span class="nb">unlink</span><span class="p">(</span><span class="nv">$file</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Not so cool to use a real filesystem. Real programmers should use <a href="https://github.com/mikey179/vfsStream/wiki">virtual file system</a>! But is it possible to intercept system functions like <code>file_get_contents()</code> in PHP?</p>
+
+<p>I can suppose that most of programmers will argue that it&rsquo;s impossible to intercept system function without extensions such as <a href="https://github.com/mikey179/vfsStream/wiki">runkit</a>. Yes, it&rsquo;s absolutely true that we can not change the function that already loaded into the memory of PHP. However there is a small loophole in the PHP that can be exploited for free.</p>
+
+<h3>Namespace magic</h3>
+
+<p>All modern code is using namespaces to organize the better structure, to encapsulate a classes into a group and to avoid name collisions for functions, classes and constants. There are special <a href="http://php.net/manual/en/language.namespaces.rules.php">namespace resolution rules</a> that are used for resolving relative names to fully-qualified names. Let&rsquo;s have a careful look to the rule number 5:</p>
+
+<blockquote><p>Inside namespace (say A\B), calls to unqualified functions are resolved at run-time. Here is how a call to function foo() is resolved:<br/>1. It looks for a function from the current namespace: A\B\foo().<br/>2. It tries to find and call the global function foo().</p></blockquote>
+
+
+<p>Wow! Inside namespace calls to unqualified functions are resolved at run-time! This means that we can create a function with the same name as system function in a namespace and it will be used instead of system one. Let&rsquo;s check this fact:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="k">namespace</span> <span class="nx">Test</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">use</span> <span class="nx">PHPUnit_Framework_TestCase</span> <span class="k">as</span> <span class="nx">TestCase</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">function</span> <span class="nf">file_get_contents</span><span class="p">(</span><span class="nv">$filename</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="s1">&#39;Wow!&#39;</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">FilePrinterTest</span> <span class="k">extends</span> <span class="nx">TestCase</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">protected</span> <span class="nv">$printer</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">public</span> <span class="k">function</span> <span class="nf">setUp</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">printer</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">FilePrinter</span><span class="p">();</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">public</span> <span class="k">function</span> <span class="nf">testShow</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="nv">$file</span> <span class="o">=</span> <span class="nb">tempnam</span><span class="p">(</span><span class="s2">&quot;/tmp&quot;</span><span class="p">,</span> <span class="s2">&quot;PHP&quot;</span><span class="p">);</span>
+</span><span class='line'>        <span class="nb">file_put_contents</span><span class="p">(</span><span class="nv">$file</span><span class="p">,</span> <span class="s1">&#39;test&#39;</span><span class="p">);</span>
+</span><span class='line'>        <span class="nb">ob_start</span><span class="p">();</span>
+</span><span class='line'>        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">printer</span><span class="o">-&gt;</span><span class="na">show</span><span class="p">(</span><span class="nv">$file</span><span class="p">);</span>
+</span><span class='line'>        <span class="nv">$content</span> <span class="o">=</span> <span class="nb">ob_end_clean</span><span class="p">();</span>
+</span><span class='line'>        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">assertEqual</span><span class="p">(</span><span class="s1">&#39;test&#39;</span><span class="p">,</span> <span class="nv">$content</span><span class="p">);</span>
+</span><span class='line'>        <span class="nb">unlink</span><span class="p">(</span><span class="nv">$file</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Pay an attention that we define the function <code>file_get_contents()</code> in the namespace <code>Test</code>. If we run our test we will see that it is broken, because we expecting &lsquo;test&rsquo; but got &lsquo;Wow!&rsquo;. Very promising ) Small demo is also available at <a href="http://3v4l.org/K1b9k">http://3v4l.org/K1b9k</a></p>
+
+<p>Moreover, if we need to call an original function we can easily do this by using qualified name:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="k">namespace</span> <span class="nx">Test</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">function</span> <span class="nf">file_get_contents</span><span class="p">(</span><span class="nv">$filename</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">echo</span> <span class="s1">&#39;Wow!&#39;</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">return</span> <span class="nx">\file_get_contents</span><span class="p">(</span><span class="nv">$filename</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Aspect-oriented programming with functions</h3>
+
+<p>Go! AOP framework has an experimental support for system function interception from the version 0.4.0. This means that there is an ability to create an advice for system functions!</p>
+
+<p>Function interception can be very-very slow, so please do not try to intercept all system functions in all namespaces. However it&rsquo;s so amazing. Let&rsquo;s try:</p>
+
+<ul>
+<li>Enable function interception in the kernel by setting &lsquo;interceptFunctions&rsquo; => true for the kernel.</li>
+<li>Create an advice within aspect to intercept functions:</li>
+</ul>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="k">use</span> <span class="nx">Go\Aop\Aspect</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="nx">Go\Aop\Intercept\FunctionInvocation</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="nx">Go\Lang\Annotation\Around</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="sd">/**</span>
+</span><span class='line'><span class="sd"> * Function interceptor aspect</span>
+</span><span class='line'><span class="sd"> */</span>
+</span><span class='line'><span class="k">class</span> <span class="nc">FunctionInterceptorAspect</span> <span class="k">implements</span> <span class="nx">Aspect</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="sd">/**</span>
+</span><span class='line'><span class="sd">     * @param FunctionInvocation $invocation</span>
+</span><span class='line'><span class="sd">     *</span>
+</span><span class='line'><span class="sd">     * @Around(&quot;execution(Test\*(*))&quot;)</span>
+</span><span class='line'><span class="sd">     *</span>
+</span><span class='line'><span class="sd">     * @return mixed</span>
+</span><span class='line'><span class="sd">     */</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">function</span> <span class="nf">aroundFunction</span><span class="p">(</span><span class="nx">FunctionInvocation</span> <span class="nv">$invocation</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="k">echo</span> <span class="s1">&#39;Calling Around Interceptor for function: &#39;</span><span class="p">,</span>
+</span><span class='line'>            <span class="nv">$invocation</span><span class="o">-&gt;</span><span class="na">getFunction</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">getName</span><span class="p">(),</span>
+</span><span class='line'>            <span class="s1">&#39;()&#39;</span><span class="p">,</span>
+</span><span class='line'>            <span class="s1">&#39; with arguments: &#39;</span><span class="p">,</span>
+</span><span class='line'>            <span class="nb">json_encode</span><span class="p">(</span><span class="nv">$invocation</span><span class="o">-&gt;</span><span class="na">getArguments</span><span class="p">()),</span>
+</span><span class='line'>            <span class="nx">PHP_EOL</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="k">return</span> <span class="nv">$invocation</span><span class="o">-&gt;</span><span class="na">proceed</span><span class="p">();</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>Register this aspect in the kernel</li>
+</ul>
+
+
+<p>Here we define an advice with an around pointcut <code>execution(Test\*(*))</code>. Pointcut can be translated as &ldquo;around execution of any (*) system functions inside the <code>Test</code> namespace&rdquo;. Body of this method is an advice that will be invoked around the original function. So we have a full control over the return value and original invocation by calling <code>$invocation-&gt;proceed()</code> at the end.
+Look at the screenshot from ZF2 framework:</p>
+
+<p><img src="http://go.aopphp.com/images/function-aop.png" title="Function interception with Go! AOP framework" alt="ZF2 function interception"></p>
+
+<p>If you want to try this by hand, feel free to install the Go! AOP framework with composer and open the <code>demos/</code> folder in the browser:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="nx">composer</span> <span class="k">require</span> <span class="nx">lisachenko</span><span class="o">/</span><span class="nx">go</span><span class="o">-</span><span class="nx">aop</span><span class="o">-</span><span class="nx">php</span><span class="o">:</span><span class="mf">0.4</span><span class="o">.</span><span class="mi">0</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Thank you for attention!</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Implementing logging aspect with Doctrine annotations]]></title>

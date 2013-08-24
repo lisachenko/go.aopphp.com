@@ -4,7 +4,7 @@
   <title><![CDATA[Category: aop | Go! Aspect-Oriented Framework]]></title>
   <link href="http://go.aopphp.com/blog/categories/aop/atom.xml" rel="self"/>
   <link href="http://go.aopphp.com/"/>
-  <updated>2013-07-21T21:54:59+04:00</updated>
+  <updated>2013-08-24T19:04:57+04:00</updated>
   <id>http://go.aopphp.com/</id>
   <author>
     <name><![CDATA[Lisachenko Alexander]]></name>
@@ -12,6 +12,190 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Intercepting execution of system functions in PHP]]></title>
+    <link href="http://go.aopphp.com/blog/2013/08/24/intercepting-execution-of-system-functions-in-php/"/>
+    <updated>2013-08-24T17:00:00+04:00</updated>
+    <id>http://go.aopphp.com/blog/2013/08/24/intercepting-execution-of-system-functions-in-php</id>
+    <content type="html"><![CDATA[<p>Intercepting an execution of methods is one of the most common tasks for AOP. In the Java world there are a lot of articles that has a detailed examples for transactional control, logging, authorization, etc. But all AOP stuff in Java is related only to the classes and objects, because functions are not first-class citizens in Java whereas PHP has a good support for functions. By using some tricks we can create a proxies for system functions and add our own interceptors with custom logic. This article will show you how to use AOP techniques with functions in PHP.</p>
+
+<!-- more -->
+
+
+<p>Ok, let&rsquo;s have some experiments with PHP. Suppose, that we have a nice code that uses the <code>file_get_contents()</code> function to load the content of a file and then prints it to the screen:</p>
+
+<p>```php
+namespace Test;</p>
+
+<p>class FilePrinter
+{</p>
+
+<pre><code>public function show($filename)
+{
+    echo '&lt;pre&gt;', htmlspecialchars(file_get_contents($filename)), '&lt;/pre&gt;';
+}
+</code></pre>
+
+<p>}
+```</p>
+
+<p>Is it possible to test this class and method? Of course, yes! We can create a unit test that will generate a temporary file and then just check that content is correct:</p>
+
+<p>```php
+namespace Test;</p>
+
+<p>use PHPUnit_Framework_TestCase as TestCase;</p>
+
+<p>class FilePrinterTest extends TestCase
+{</p>
+
+<pre><code>protected $printer;
+
+public function setUp()
+{
+    $this-&gt;printer = new FilePrinter();
+}
+
+public function testShow()
+{
+    $file = tempnam("/tmp", "PHP");
+    file_put_contents($file, 'test');
+    ob_start();
+    $this-&gt;printer-&gt;show($file);
+    $content = ob_end_clean();
+    $this-&gt;assertEqual('test', $content);
+    unlink($file);
+}
+</code></pre>
+
+<p>}
+<code>``
+Not so cool to use a real filesystem. Real programmers should use [virtual file system](https://github.com/mikey179/vfsStream/wiki)! But is it possible to intercept system functions like</code>file_get_contents()` in PHP?</p>
+
+<p>I can suppose that most of programmers will argue that it&rsquo;s impossible to intercept system function without extensions such as <a href="https://github.com/mikey179/vfsStream/wiki">runkit</a>. Yes, it&rsquo;s absolutely true that we can not change the function that already loaded into the memory of PHP. However there is a small loophole in the PHP that can be exploited for free.</p>
+
+<h3>Namespace magic</h3>
+
+<p>All modern code is using namespaces to organize the better structure, to encapsulate a classes into a group and to avoid name collisions for functions, classes and constants. There are special <a href="http://php.net/manual/en/language.namespaces.rules.php">namespace resolution rules</a> that are used for resolving relative names to fully-qualified names. Let&rsquo;s have a careful look to the rule number 5:</p>
+
+<p><blockquote><p>Inside namespace (say A\B), calls to unqualified functions are resolved at run-time. Here is how a call to function foo() is resolved:<br/>1. It looks for a function from the current namespace: A\B\foo().<br/>2. It tries to find and call the global function foo().</p></blockquote></p>
+
+<p>Wow! Inside namespace calls to unqualified functions are resolved at run-time! This means that we can create a function with the same name as system function in a namespace and it will be used instead of system one. Let&rsquo;s check this fact:</p>
+
+<p>```php
+namespace Test;</p>
+
+<p>use PHPUnit_Framework_TestCase as TestCase;</p>
+
+<p>function file_get_contents($filename) {</p>
+
+<pre><code>return 'Wow!';
+</code></pre>
+
+<p>}</p>
+
+<p>class FilePrinterTest extends TestCase
+{</p>
+
+<pre><code>protected $printer;
+
+public function setUp()
+{
+    $this-&gt;printer = new FilePrinter();
+}
+
+public function testShow()
+{
+    $file = tempnam("/tmp", "PHP");
+    file_put_contents($file, 'test');
+    ob_start();
+    $this-&gt;printer-&gt;show($file);
+    $content = ob_end_clean();
+    $this-&gt;assertEqual('test', $content);
+    unlink($file);
+}
+</code></pre>
+
+<p>}
+```</p>
+
+<p>Pay an attention that we define the function <code>file_get_contents()</code> in the namespace <code>Test</code>. If we run our test we will see that it is broken, because we expecting &lsquo;test&rsquo; but got &lsquo;Wow!&rsquo;. Very promising ) Small demo is also available at <a href="http://3v4l.org/K1b9k">http://3v4l.org/K1b9k</a></p>
+
+<p>Moreover, if we need to call an original function we can easily do this by using qualified name:</p>
+
+<p>```php
+namespace Test;</p>
+
+<p>function file_get_contents($filename) {</p>
+
+<pre><code>echo 'Wow!';
+return \file_get_contents($filename);
+</code></pre>
+
+<p>}
+```</p>
+
+<h3>Aspect-oriented programming with functions</h3>
+
+<p>Go! AOP framework has an experimental support for system function interception from the version 0.4.0. This means that there is an ability to create an advice for system functions!</p>
+
+<p>Function interception can be very-very slow, so please do not try to intercept all system functions in all namespaces. However it&rsquo;s so amazing. Let&rsquo;s try:</p>
+
+<ul>
+<li>Enable function interception in the kernel by setting &lsquo;interceptFunctions&rsquo; => true for the kernel.</li>
+<li>Create an advice within aspect to intercept functions:
+```php
+use Go\Aop\Aspect;
+use Go\Aop\Intercept\FunctionInvocation;
+use Go\Lang\Annotation\Around;</li>
+</ul>
+
+
+<p>/<em>*
+ * Function interceptor aspect
+ </em>/
+class FunctionInterceptorAspect implements Aspect
+{</p>
+
+<pre><code>/**
+ * @param FunctionInvocation $invocation
+ *
+ * @Around("execution(Test\*(*))")
+ *
+ * @return mixed
+ */
+public function aroundFunction(FunctionInvocation $invocation)
+{
+    echo 'Calling Around Interceptor for function: ',
+        $invocation-&gt;getFunction()-&gt;getName(),
+        '()',
+        ' with arguments: ',
+        json_encode($invocation-&gt;getArguments()),
+        PHP_EOL;
+
+    return $invocation-&gt;proceed();
+}
+</code></pre>
+
+<p>}
+```
+* Register this aspect in the kernel</p>
+
+<p>Here we define an advice with an around pointcut <code>execution(Test\*(*))</code>. Pointcut can be translated as &ldquo;around execution of any (*) system functions inside the <code>Test</code> namespace&rdquo;. Body of this method is an advice that will be invoked around the original function. So we have a full control over the return value and original invocation by calling <code>$invocation-&gt;proceed()</code> at the end.
+Look at the screenshot from ZF2 framework:</p>
+
+<p><img src="/images/function-aop.png" title="&lsquo;Function interception with Go! AOP framework&rsquo; &lsquo;ZF2 function interception&rsquo;" ></p>
+
+<p>If you want to try this by hand, feel free to install the Go! AOP framework with composer and open the <code>demos/</code> folder in the browser:</p>
+
+<p><code>
+composer require lisachenko/go-aop-php:0.4.0
+</code></p>
+
+<p>Thank you for attention!</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Implementing logging aspect with Doctrine annotations]]></title>
@@ -835,17 +1019,6 @@ behavior that is executed before, after, or &ldquo;around&rdquo; a join point is
 <a href="/docs/introduction/">Introduction</a> section.</p>
 
 <p>PHP traits can be used to implement some aspect-like functionality.</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[SymfonyCampUA-2012 presentation]]></title>
-    <link href="http://go.aopphp.com/blog/2012/12/02/symfonycampua-2012-presentation-about-weaving-of-aspects-with-go-aop-library/"/>
-    <updated>2012-12-02T00:00:00+04:00</updated>
-    <id>http://go.aopphp.com/blog/2012/12/02/symfonycampua-2012-presentation-about-weaving-of-aspects-with-go-aop-library</id>
-    <content type="html"><![CDATA[<iframe src="http://www.slideshare.net/slideshow/embed_code/15487433?rel=0" width="597" height="486" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC;border-width:1px 1px 0;margin-bottom:5px" allowfullscreen webkitallowfullscreen mozallowfullscreen>
-</iframe>
-
 ]]></content>
   </entry>
   
