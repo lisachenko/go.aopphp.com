@@ -1,0 +1,628 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Aspect-Oriented programming with Yii - Go! Aspect-Oriented Framework</title>
+  <meta name="author" content="Lisachenko Alexander">
+
+  
+  <meta name="description" content="Configuration of framework is typically tricky process, so this article gives a how-to manual to start playing with Go! AOP and famous Yii frameworks.
+">
+  
+  <meta name="keywords" content="Yii, AOP, Go!, PHP, framework, configuration, installation">
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://go.aopphp.com/blog/2013/09/28/aspect-oriented-programming-with-yii/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="Go! Aspect-Oriented Framework" type="application/atom+xml">
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+<script>
+    (function() {
+        var cx = '000825903632656227906:i6jpaivx5ow';
+        var gcse = document.createElement('script'); gcse.type = 'text/javascript'; gcse.async = true;
+        gcse.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') +
+                '//www.google.com/cse/cse.js?cx=' + cx;
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(gcse, s);
+    })();
+</script>
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-38432506-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Go! Aspect-Oriented Framework</a></h1>
+  
+    <h2>Aspect-Oriented Programming in PHP.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="/search/" method="get">
+  <fieldset role="search">
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+    <li><a href="/">Home</a></li>
+    <li><a href="/docs/">Documentation</a></li>
+</ul>
+
+</nav>
+  <a href="https://github.com/lisachenko/go-aop-php">
+      <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png" alt="Fork me on GitHub">
+  </a>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h2 class="entry-title">Aspect-Oriented Programming With Yii</h2>
+    
+    
+      <p class="meta">
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>Aspect-Oriented programming becomes more popular for PHP, but it requires good knowledge of OOP and can be very cumbersome for beginners. So it&rsquo;s important to have a working examples and manuals to have a possibility to run it locally with favorite framework. Go! AOP provides all the necessary functionality for configuration of AOP into any frameworks, but integration process can be very tricky, so configuration is not so easy. In this article we will configure a working example for Yii framework.</p>
+
+<!-- more -->
+
+
+<p>Let&rsquo;s start! First of all, we need an empty <code>yii-aspect</code> directory for our project:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>mkdir yii-aspect <span class="o">&amp;&amp;</span> <span class="nb">cd </span>yii-aspect
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Next step is to install dependencies: Yii and Go! AOP frameworks. Go! AOP is registered on packagist and can be easily installed with composer:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>composer require lisachenko/go-aop-php:0.4.*
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Latest version of Yii framework (1.1.14) is on <a href="https://packagist.org/packages/yiisoft/yii">packagist</a> too! This means that we can install it without any hacks with local repositories:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>composer require yiisoft/yii:1.1.*
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This is a minimum list of dependencies for our first example. Following step is very easy, thanks to the <code>yiic</code> console command. By default, all binaries are installed into <code>./vendor/bin</code> folder, so <code>yiic</code> console should be there too.</p>
+
+<p>Let&rsquo;s create a web application:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>yiic webapp app
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Yii will generate a directory <code>app</code> with default project structure and files. This project can be opened in the browser, but AOP isn&rsquo;t enabled right now. To enable AOP we should prepare our application to have an ability to use it. To enable AOP we need to update the front controller of our application (<code>./app/index.php</code>) in the following way:</p>
+
+<p>Add this lines to the top of file before original content:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="o">&lt;?</span><span class="nx">php</span>
+</span><span class='line'><span class="k">use</span> <span class="nx">Go\Instrument\Transformer\FilterInjectorTransformer</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// Load the composer autoloader</span>
+</span><span class='line'><span class="k">include</span> <span class="nx">__DIR__</span> <span class="o">.</span> <span class="s1">&#39;/../vendor/autoload.php&#39;</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// Load AOP kernel</span>
+</span><span class='line'><span class="k">include</span> <span class="nx">__DIR__</span> <span class="o">.</span> <span class="s1">&#39;/aspect.php&#39;</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>And replace initialization of Yii at the bottom of file from <code>require_once($yii)</code> to <code>require_once(FilterInjectorTransformer::rewrite($yii))</code>. This is needed to give a hook for the Go! AOP framework to weave aspects into classes. Aspects are defined as separated classes and included in the <code>./aspect.php</code> file. Let&rsquo;s move to it and to the aspect kernel</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="k">include</span> <span class="nx">__DIR__</span> <span class="o">.</span> <span class="s1">&#39;/protected/extensions/go-aop-php/ApplicationAspectKernel.php&#39;</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// Prevent an error about nesting level</span>
+</span><span class='line'><span class="nb">ini_set</span><span class="p">(</span><span class="s1">&#39;xdebug.max_nesting_level&#39;</span><span class="p">,</span> <span class="mi">500</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// Initialize an application aspect container</span>
+</span><span class='line'><span class="nv">$applicationAspectKernel</span> <span class="o">=</span> <span class="nx">ApplicationAspectKernel</span><span class="o">::</span><span class="na">getInstance</span><span class="p">();</span>
+</span><span class='line'><span class="nv">$applicationAspectKernel</span><span class="o">-&gt;</span><span class="na">init</span><span class="p">(</span><span class="k">array</span><span class="p">(</span>
+</span><span class='line'>    <span class="s1">&#39;debug&#39;</span> <span class="o">=&gt;</span> <span class="k">true</span><span class="p">,</span>
+</span><span class='line'>    <span class="c1">// Application root directory</span>
+</span><span class='line'>    <span class="s1">&#39;appDir&#39;</span>   <span class="o">=&gt;</span> <span class="nx">__DIR__</span> <span class="o">.</span> <span class="s1">&#39;/../&#39;</span><span class="p">,</span>
+</span><span class='line'>    <span class="c1">// Cache directory</span>
+</span><span class='line'>    <span class="s1">&#39;cacheDir&#39;</span> <span class="o">=&gt;</span> <span class="nx">__DIR__</span> <span class="o">.</span> <span class="s1">&#39;./protected/aspect&#39;</span><span class="p">,</span>
+</span><span class='line'>    <span class="s1">&#39;excludePaths&#39;</span> <span class="o">=&gt;</span> <span class="k">array</span><span class="p">(</span>
+</span><span class='line'>        <span class="nx">__DIR__</span> <span class="o">.</span> <span class="s1">&#39;./protected/aspect&#39;</span>
+</span><span class='line'>    <span class="p">)</span>
+</span><span class='line'><span class="p">));</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This is typical configuration of Go! AOP framework where we can adjust some directories and paths. I think that this config is pretty clear to understand. Only <code>debug</code> parameter is really important. For production mode it should be <code>false</code>, but for development mode it should be enabled to enable better debugging and cache refreshing.</p>
+
+<p>In this file we also include a strange file <code>ApplicationAspectKernel.php</code>. This file contains definition of aspect kernel for our application and it&rsquo;s very simple:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="k">use</span> <span class="nx">Go\Core\AspectKernel</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="nx">Go\Core\AspectContainer</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="sd">/**</span>
+</span><span class='line'><span class="sd"> * Application Aspect Kernel</span>
+</span><span class='line'><span class="sd"> */</span>
+</span><span class='line'><span class="k">class</span> <span class="nc">ApplicationAspectKernel</span> <span class="k">extends</span> <span class="nx">AspectKernel</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="sd">/**</span>
+</span><span class='line'><span class="sd">     * Configure an AspectContainer with advisors, aspects and pointcuts</span>
+</span><span class='line'><span class="sd">     *</span>
+</span><span class='line'><span class="sd">     * @param AspectContainer $container</span>
+</span><span class='line'><span class="sd">     *</span>
+</span><span class='line'><span class="sd">     * @return void</span>
+</span><span class='line'><span class="sd">     */</span>
+</span><span class='line'>    <span class="k">protected</span> <span class="k">function</span> <span class="nf">configureAop</span><span class="p">(</span><span class="nx">AspectContainer</span> <span class="nv">$container</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="c1">// todo: register aspects, advisors, pointcuts, etc</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>There is only one method to define: <code>configureAop</code> that is used for AOP configuration. We can create an aspect now and register it in the kernel:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="o">&lt;?</span><span class="nx">php</span>
+</span><span class='line'><span class="c1">// app/protected/extensions/go-aop-php/TestMonitorAspect.php</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">namespace</span> <span class="nx">Aspect</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">use</span> <span class="nx">Go\Aop\Aspect</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="nx">Go\Aop\Intercept\FieldAccess</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="nx">Go\Aop\Intercept\MethodInvocation</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="nx">Go\Lang\Annotation\After</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="nx">Go\Lang\Annotation\Before</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="nx">Go\Lang\Annotation\Around</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="nx">Go\Lang\Annotation\Pointcut</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="sd">/**</span>
+</span><span class='line'><span class="sd"> * Monitor aspect</span>
+</span><span class='line'><span class="sd"> */</span>
+</span><span class='line'><span class="k">class</span> <span class="nc">TestMonitorAspect</span> <span class="k">implements</span> <span class="nx">Aspect</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="sd">/**</span>
+</span><span class='line'><span class="sd">     * Method that will be called before real method</span>
+</span><span class='line'><span class="sd">     *</span>
+</span><span class='line'><span class="sd">     * @param MethodInvocation $invocation Invocation</span>
+</span><span class='line'><span class="sd">     * @Before(&quot;within(**)&quot;)</span>
+</span><span class='line'><span class="sd">     */</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">function</span> <span class="nf">beforeMethodExecution</span><span class="p">(</span><span class="nx">MethodInvocation</span> <span class="nv">$invocation</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="nv">$obj</span> <span class="o">=</span> <span class="nv">$invocation</span><span class="o">-&gt;</span><span class="na">getThis</span><span class="p">();</span>
+</span><span class='line'>        <span class="k">echo</span> <span class="s1">&#39;Calling Before Interceptor for method: &#39;</span><span class="p">,</span>
+</span><span class='line'>        <span class="nb">is_object</span><span class="p">(</span><span class="nv">$obj</span><span class="p">)</span> <span class="o">?</span> <span class="nb">get_class</span><span class="p">(</span><span class="nv">$obj</span><span class="p">)</span> <span class="o">:</span> <span class="nv">$obj</span><span class="p">,</span>
+</span><span class='line'>        <span class="nv">$invocation</span><span class="o">-&gt;</span><span class="na">getMethod</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">isStatic</span><span class="p">()</span> <span class="o">?</span> <span class="s1">&#39;::&#39;</span> <span class="o">:</span> <span class="s1">&#39;-&gt;&#39;</span><span class="p">,</span>
+</span><span class='line'>        <span class="nv">$invocation</span><span class="o">-&gt;</span><span class="na">getMethod</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">getName</span><span class="p">(),</span>
+</span><span class='line'>        <span class="s1">&#39;()&#39;</span><span class="p">,</span>
+</span><span class='line'>        <span class="s1">&#39; with arguments: &#39;</span><span class="p">,</span>
+</span><span class='line'>        <span class="nb">json_encode</span><span class="p">(</span><span class="nv">$invocation</span><span class="o">-&gt;</span><span class="na">getArguments</span><span class="p">()),</span>
+</span><span class='line'>        <span class="s2">&quot;&lt;br&gt;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>&hellip; and registration in the kernel:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="o">&lt;?</span><span class="nx">php</span>
+</span><span class='line'><span class="c1">// app/protected/extensions/go-aop-php/ApplicationAspectKernel.php</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">require_once</span> <span class="s1">&#39;TestMonitorAspect.php&#39;</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">use</span> <span class="nx">Aspect\TestMonitorAspect</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="nx">Go\Core\AspectKernel</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="nx">Go\Core\AspectContainer</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="sd">/**</span>
+</span><span class='line'><span class="sd"> * Application Aspect Kernel</span>
+</span><span class='line'><span class="sd"> */</span>
+</span><span class='line'><span class="k">class</span> <span class="nc">ApplicationAspectKernel</span> <span class="k">extends</span> <span class="nx">AspectKernel</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="sd">/**</span>
+</span><span class='line'><span class="sd">     * Configure an AspectContainer with advisors, aspects and pointcuts</span>
+</span><span class='line'><span class="sd">     *</span>
+</span><span class='line'><span class="sd">     * @param AspectContainer $container</span>
+</span><span class='line'><span class="sd">     *</span>
+</span><span class='line'><span class="sd">     * @return void</span>
+</span><span class='line'><span class="sd">     */</span>
+</span><span class='line'>    <span class="k">protected</span> <span class="k">function</span> <span class="nf">configureAop</span><span class="p">(</span><span class="nx">AspectContainer</span> <span class="nv">$container</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="nv">$container</span><span class="o">-&gt;</span><span class="na">registerAspect</span><span class="p">(</span><span class="k">new</span> <span class="nx">TestMonitorAspect</span><span class="p">());</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>That&rsquo;s all )</p>
+
+<blockquote class="twitter-tweet" data-conversation="none"><p>Just have recreated <a href="https://t.co/FqlECETHO7">https://t.co/FqlECETHO7</a> to use latest <a href="https://twitter.com/search?q=%23yii&amp;src=hash">#yii</a> 1.1.x and Go! AOP with <a href="https://twitter.com/search?q=%23composer&amp;src=hash">#composer</a> /cc <a href="https://twitter.com/afdiaz">@afdiaz</a> <a href="https://twitter.com/sam_dark">@sam_dark</a></p>&mdash; Alexander Lisachenko (@lisachenko) <a href="https://twitter.com/lisachenko/statuses/383317369872855040">September 26, 2013</a></blockquote>
+
+
+<p>Just refresh the page in the browser to see a result. All methods will be intercepted by our advice <code>beforeMethodExecution</code>:</p>
+
+<p><img src="/images/yii-aop.png" title="Yii with Go! AOP framework" alt="Yii methods interception"></p>
+
+<p>PS. If you want to create an empty project with single line you can run:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>composer create-project lisachenko/yii-aspect --prefer-source --stability<span class="o">=</span>dev
+</span></code></pre></td></tr></table></div></figure>
+
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Lisachenko Alexander</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-09-28T16:28:00+04:00" pubdate data-updated="true">Sep 28<span>th</span>, 2013</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/aop/'>aop</a>, <a class='category' href='/blog/categories/cookbook/'>cookbook</a>, <a class='category' href='/blog/categories/framework/'>framework</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://go.aopphp.com/blog/2013/09/28/aspect-oriented-programming-with-yii/" data-via="lisachenko" data-counturl="http://go.aopphp.com/blog/2013/09/28/aspect-oriented-programming-with-yii/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2013/08/24/intercepting-execution-of-system-functions-in-php/" title="Previous Post: Intercepting execution of system functions in PHP">&laquo; Intercepting execution of system functions in PHP</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/09/28/aspect-oriented-programming-with-yii/">Aspect-Oriented programming with Yii</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/08/24/intercepting-execution-of-system-functions-in-php/">Intercepting execution of system functions in PHP</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/21/implementing-logging-aspect-with-doctrine-annotations/">Implementing logging aspect with Doctrine annotations</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/06/02/application-level-logging-with-aop-and-monolog/">Application-level logging with AOP and Monolog</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/03/19/implementing-fluent-interface-pattern-in-php/">Implementing reusable fluent interface pattern in PHP with AOP</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>Latest Tweets</h1>
+  <ul id="tweets">
+    <li class="loading">Status updating...</li>
+  </ul>
+  <script type="text/javascript">
+    $.domReady(function(){
+      getTwitterFeed("lisachenko", 4, false);
+    });
+  </script>
+  <script src="/javascripts/twitter.js" type="text/javascript"> </script>
+  
+    <a href="http://twitter.com/lisachenko" class="twitter-follow-button" data-show-count="false">Follow @lisachenko</a>
+  
+</section>
+
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/lisachenko">@lisachenko</a> on GitHub
+  
+  <script type="text/javascript">
+    $.domReady(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'lisachenko',
+            count: 0,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+<section class="googleplus googleplus-hidden">
+  <h1>
+    <a href="https://plus.google.com/112404666490406543209?rel=author">
+      <img src="http://www.google.com/images/icons/ui/gprofile_button-32.png" width="32" height="32">
+      Google+
+    </a>
+  </h1>
+</section>
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Lisachenko Alexander -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'go-aop-php';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://go.aopphp.com/blog/2013/09/28/aspect-oriented-programming-with-yii/';
+        var disqus_url = 'http://go.aopphp.com/blog/2013/09/28/aspect-oriented-programming-with-yii/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

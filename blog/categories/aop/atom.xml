@@ -4,7 +4,7 @@
   <title><![CDATA[Category: aop | Go! Aspect-Oriented Framework]]></title>
   <link href="http://go.aopphp.com/blog/categories/aop/atom.xml" rel="self"/>
   <link href="http://go.aopphp.com/"/>
-  <updated>2013-08-24T19:04:57+04:00</updated>
+  <updated>2013-09-28T17:59:49+04:00</updated>
   <id>http://go.aopphp.com/</id>
   <author>
     <name><![CDATA[Lisachenko Alexander]]></name>
@@ -12,6 +12,203 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Aspect-Oriented programming with Yii]]></title>
+    <link href="http://go.aopphp.com/blog/2013/09/28/aspect-oriented-programming-with-yii/"/>
+    <updated>2013-09-28T16:28:00+04:00</updated>
+    <id>http://go.aopphp.com/blog/2013/09/28/aspect-oriented-programming-with-yii</id>
+    <content type="html"><![CDATA[<p>Aspect-Oriented programming becomes more popular for PHP, but it requires good knowledge of OOP and can be very cumbersome for beginners. So it&rsquo;s important to have a working examples and manuals to have a possibility to run it locally with favorite framework. Go! AOP provides all the necessary functionality for configuration of AOP into any frameworks, but integration process can be very tricky, so configuration is not so easy. In this article we will configure a working example for Yii framework.</p>
+
+<!-- more -->
+
+
+<p>Let&rsquo;s start! First of all, we need an empty <code>yii-aspect</code> directory for our project:</p>
+
+<p><code>bash
+mkdir yii-aspect &amp;&amp; cd yii-aspect
+</code></p>
+
+<p>Next step is to install dependencies: Yii and Go! AOP frameworks. Go! AOP is registered on packagist and can be easily installed with composer:
+<code>bash
+composer require lisachenko/go-aop-php:0.4.*
+</code>
+Latest version of Yii framework (1.1.14) is on <a href="https://packagist.org/packages/yiisoft/yii">packagist</a> too! This means that we can install it without any hacks with local repositories:
+<code>bash
+composer require yiisoft/yii:1.1.*
+</code></p>
+
+<p>This is a minimum list of dependencies for our first example. Following step is very easy, thanks to the <code>yiic</code> console command. By default, all binaries are installed into <code>./vendor/bin</code> folder, so <code>yiic</code> console should be there too.</p>
+
+<p>Let&rsquo;s create a web application:
+<code>bash
+yiic webapp app
+</code>
+Yii will generate a directory <code>app</code> with default project structure and files. This project can be opened in the browser, but AOP isn&rsquo;t enabled right now. To enable AOP we should prepare our application to have an ability to use it. To enable AOP we need to update the front controller of our application (<code>./app/index.php</code>) in the following way:</p>
+
+<p>Add this lines to the top of file before original content:
+```php
+&lt;?php
+use Go\Instrument\Transformer\FilterInjectorTransformer;</p>
+
+<p>// Load the composer autoloader
+include <strong>DIR</strong> . &lsquo;/../vendor/autoload.php&rsquo;;</p>
+
+<p>// Load AOP kernel
+include <strong>DIR</strong> . &lsquo;/aspect.php&rsquo;;
+```</p>
+
+<p>And replace initialization of Yii at the bottom of file from <code>require_once($yii)</code> to <code>require_once(FilterInjectorTransformer::rewrite($yii))</code>. This is needed to give a hook for the Go! AOP framework to weave aspects into classes. Aspects are defined as separated classes and included in the <code>./aspect.php</code> file. Let&rsquo;s move to it and to the aspect kernel</p>
+
+<p>```php</p>
+
+<p>include <strong>DIR</strong> . &lsquo;/protected/extensions/go-aop-php/ApplicationAspectKernel.php&rsquo;;</p>
+
+<p>// Prevent an error about nesting level
+ini_set(&lsquo;xdebug.max_nesting_level&rsquo;, 500);</p>
+
+<p>// Initialize an application aspect container
+$applicationAspectKernel = ApplicationAspectKernel::getInstance();
+$applicationAspectKernel->init(array(</p>
+
+<pre><code>'debug' =&gt; true,
+// Application root directory
+'appDir'   =&gt; __DIR__ . '/../',
+// Cache directory
+'cacheDir' =&gt; __DIR__ . './protected/aspect',
+'excludePaths' =&gt; array(
+    __DIR__ . './protected/aspect'
+)
+</code></pre>
+
+<p>));
+```</p>
+
+<p>This is typical configuration of Go! AOP framework where we can adjust some directories and paths. I think that this config is pretty clear to understand. Only <code>debug</code> parameter is really important. For production mode it should be <code>false</code>, but for development mode it should be enabled to enable better debugging and cache refreshing.</p>
+
+<p>In this file we also include a strange file <code>ApplicationAspectKernel.php</code>. This file contains definition of aspect kernel for our application and it&rsquo;s very simple:</p>
+
+<p>```php</p>
+
+<p>use Go\Core\AspectKernel;
+use Go\Core\AspectContainer;</p>
+
+<p>/<em>*
+ * Application Aspect Kernel
+ </em>/
+class ApplicationAspectKernel extends AspectKernel
+{</p>
+
+<pre><code>/**
+ * Configure an AspectContainer with advisors, aspects and pointcuts
+ *
+ * @param AspectContainer $container
+ *
+ * @return void
+ */
+protected function configureAop(AspectContainer $container)
+{
+    // todo: register aspects, advisors, pointcuts, etc
+}
+</code></pre>
+
+<p>}
+```</p>
+
+<p>There is only one method to define: <code>configureAop</code> that is used for AOP configuration. We can create an aspect now and register it in the kernel:</p>
+
+<p>```php
+&lt;?php
+// app/protected/extensions/go-aop-php/TestMonitorAspect.php</p>
+
+<p>namespace Aspect;</p>
+
+<p>use Go\Aop\Aspect;
+use Go\Aop\Intercept\FieldAccess;
+use Go\Aop\Intercept\MethodInvocation;
+use Go\Lang\Annotation\After;
+use Go\Lang\Annotation\Before;
+use Go\Lang\Annotation\Around;
+use Go\Lang\Annotation\Pointcut;</p>
+
+<p>/<em>*
+ * Monitor aspect
+ </em>/
+class TestMonitorAspect implements Aspect
+{</p>
+
+<pre><code>/**
+ * Method that will be called before real method
+ *
+ * @param MethodInvocation $invocation Invocation
+ * @Before("within(**)")
+ */
+public function beforeMethodExecution(MethodInvocation $invocation)
+{
+    $obj = $invocation-&gt;getThis();
+    echo 'Calling Before Interceptor for method: ',
+    is_object($obj) ? get_class($obj) : $obj,
+    $invocation-&gt;getMethod()-&gt;isStatic() ? '::' : '-&gt;',
+    $invocation-&gt;getMethod()-&gt;getName(),
+    '()',
+    ' with arguments: ',
+    json_encode($invocation-&gt;getArguments()),
+    "&lt;br&gt;\n";
+}
+</code></pre>
+
+<p>}
+```
+&hellip; and registration in the kernel:</p>
+
+<p>```php
+&lt;?php
+// app/protected/extensions/go-aop-php/ApplicationAspectKernel.php</p>
+
+<p>require_once &lsquo;TestMonitorAspect.php&rsquo;;</p>
+
+<p>use Aspect\TestMonitorAspect;
+use Go\Core\AspectKernel;
+use Go\Core\AspectContainer;</p>
+
+<p>/<em>*
+ * Application Aspect Kernel
+ </em>/
+class ApplicationAspectKernel extends AspectKernel
+{</p>
+
+<pre><code>/**
+ * Configure an AspectContainer with advisors, aspects and pointcuts
+ *
+ * @param AspectContainer $container
+ *
+ * @return void
+ */
+protected function configureAop(AspectContainer $container)
+{
+    $container-&gt;registerAspect(new TestMonitorAspect());
+}
+</code></pre>
+
+<p>}
+```</p>
+
+<p>That&rsquo;s all )</p>
+
+<blockquote class="twitter-tweet" data-conversation="none"><p>Just have recreated <a href="https://t.co/FqlECETHO7">https://t.co/FqlECETHO7</a> to use latest <a href="https://twitter.com/search?q=%23yii&amp;src=hash">#yii</a> 1.1.x and Go! AOP with <a href="https://twitter.com/search?q=%23composer&amp;src=hash">#composer</a> /cc <a href="https://twitter.com/afdiaz">@afdiaz</a> <a href="https://twitter.com/sam_dark">@sam_dark</a></p>&mdash; Alexander Lisachenko (@lisachenko) <a href="https://twitter.com/lisachenko/statuses/383317369872855040">September 26, 2013</a></blockquote>
+
+
+<p>Just refresh the page in the browser to see a result. All methods will be intercepted by our advice <code>beforeMethodExecution</code>:</p>
+
+<p><img src="/images/yii-aop.png" title="&lsquo;Yii with Go! AOP framework&rsquo; &lsquo;Yii methods interception&rsquo;" ></p>
+
+<p>PS. If you want to create an empty project with single line you can run:</p>
+
+<p><code>bash
+composer create-project lisachenko/yii-aspect --prefer-source --stability=dev
+</code></p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Intercepting execution of system functions in PHP]]></title>
@@ -989,36 +1186,6 @@ $user-&gt;setName('John')-&gt;setSurname('Doe')-&gt;setPassword('root');
 </code>
 No more copying &ldquo;return $this&rdquo; for hundreds of methods, only pure source code, intuitive FluentInterface and
 implementation of FluentInterface in the form of a simple aspect.</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Aspect-Oriented Framework for PHP]]></title>
-    <link href="http://go.aopphp.com/blog/2013/02/11/aspect-oriented-framework-for-php/"/>
-    <updated>2013-02-11T22:55:00+04:00</updated>
-    <id>http://go.aopphp.com/blog/2013/02/11/aspect-oriented-framework-for-php</id>
-    <content type="html"><![CDATA[<p>Go! is a PHP 5.4 framework based on OOP and AOP paradigms and designed by Lisachenko Alexander.
-It allows developers to add support of AOP to every PHP application.</p>
-
-<p>Go! doesn&rsquo;t require any PECL-extentions, it neither uses any dark magic of Runkit nor evals, the library doesn&rsquo;t use DI-containers.
-The code with weaved aspects is fully readable and native, it can be easily debugged with XDebug.
-You can debug either classes or aspects.
-The main advantage of Go! is that potentially it can be installed in every PHP-application,
-because you don&rsquo;t have to change the application source code at all.
-As an example, with the help of 10-20 lines of code we can intercept all the public, protected and static methods in all the classes
-of application and display the name and the arguments of each method during its execution.</p>
-
-<h2>What is AOP?</h2>
-
-<p><a href="http://en.wikipedia.org/wiki/Aspect-oriented_programming">AOP (Aspect-Oriented Programming)</a> is an approach to cross-cutting concerns, where the concerns are designed and implemented
-in a &ldquo;modular&rdquo; way (that is, with appropriate encapsulation, lack of duplication, etc.), then integrated into all the relevant
-execution points in a succinct and robust way, e.g. through declarative or programmatic means.</p>
-
-<p>In AOP terms, the execution points are called join points, a particular set of them is called a pointcut and the new
-behavior that is executed before, after, or &ldquo;around&rdquo; a join point is called advice. You can read more about AOP in
-<a href="/docs/introduction/">Introduction</a> section.</p>
-
-<p>PHP traits can be used to implement some aspect-like functionality.</p>
 ]]></content>
   </entry>
   
