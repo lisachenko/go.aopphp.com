@@ -50,7 +50,7 @@ protected members of the target class.
 
     (function() {
       var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      ga.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 'stats.g.doubleclick.net/dc.js';
       var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
     })();
   </script>
@@ -107,7 +107,7 @@ running the advice in the &ldquo;privileged&rdquo; scope.</p>
 contains two private data members.</p>
 
 <figure class='code'><figcaption><span> (TestPrivileged.php)</span> <a href='/downloads/code/privileged-advices/TestPrivileged.php'>download</a></figcaption>
- <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
@@ -146,7 +146,7 @@ contains two private data members.</p>
 the class’s private data member to perform its logic.</p>
 
 <figure class='code'><figcaption><span> (PrivilegeTestAspect.php)</span> <a href='/downloads/code/privileged-advices/PrivilegeTestAspect.php'>download</a></figcaption>
- <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
@@ -358,6 +358,10 @@ more important to understand the negative implications of using this technique.<
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/05/24/what-is-new-in-version-0-dot-5-dot-0/">What is new in version 0.5.0</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2013/09/28/aspect-oriented-programming-with-yii/">Aspect-Oriented programming with Yii</a>
       </li>
     
@@ -371,10 +375,6 @@ more important to understand the negative implications of using this technique.<
     
       <li class="post">
         <a href="/blog/2013/06/02/application-level-logging-with-aop-and-monolog/">Application-level logging with AOP and Monolog</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/03/19/implementing-fluent-interface-pattern-in-php/">Implementing reusable fluent interface pattern in PHP with AOP</a>
       </li>
     
   </ul>
@@ -446,7 +446,7 @@ more important to understand the negative implications of using this technique.<
     </div>
   </div>
   <footer role="contentinfo"><p>
-  Copyright &copy; 2013 - Lisachenko Alexander -
+  Copyright &copy; 2014 - Lisachenko Alexander -
   <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
 </p>
 

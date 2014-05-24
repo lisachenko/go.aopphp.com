@@ -4,7 +4,7 @@
   <title><![CDATA[Category: aop | Go! Aspect-Oriented Framework]]></title>
   <link href="http://go.aopphp.com/blog/categories/aop/atom.xml" rel="self"/>
   <link href="http://go.aopphp.com/"/>
-  <updated>2013-09-28T17:59:49+04:00</updated>
+  <updated>2014-05-24T15:59:31+04:00</updated>
   <id>http://go.aopphp.com/</id>
   <author>
     <name><![CDATA[Lisachenko Alexander]]></name>
@@ -12,6 +12,197 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[What is new in version 0.5.0]]></title>
+    <link href="http://go.aopphp.com/blog/2014/05/24/what-is-new-in-version-0-dot-5-dot-0/"/>
+    <updated>2014-05-24T21:26:00+04:00</updated>
+    <id>http://go.aopphp.com/blog/2014/05/24/what-is-new-in-version-0-dot-5-dot-0</id>
+    <content type="html"><![CDATA[<p>New versions of frameworks are always exciting because they provide more features and can contain important fixes and changes. Go! AOP evolves too, so I prepared this article for users to underline most important changes.</p>
+
+<!-- more -->
+
+
+<p></p>
+
+<h3>Support for custom streams and read-only file systems</h3>
+
+<p><a href="https://github.com/lisachenko/go-aop-php/pull/118">lisachenko/go-aop-php#118</a></p>
+
+<p>This feature is one of the most interesting, because it allows to use framework with any stream filters and wrappers, for example with phar archives. It is possible to generate an AOP cache and put it into the phar archive as a standalone read-only application. Possible usages of aspects in the phar archives are logging, dry-run control and much more. Do you bored with implementation of dry-run option for each command? Just give a try for AOP and define an aspect for that!</p>
+
+<h3>Direct advisors</h3>
+
+<p><a href="https://github.com/lisachenko/go-aop-php/pull/142">lisachenko/go-aop-php#142</a></p>
+
+<p>I received a lot of complains about usage of annotations for defining advices instead of pure PHP code. So I decided to give an alternative way for defining advisors with closures:</p>
+
+<p>```php</p>
+
+<pre><code>protected function configureAop(AspectContainer $container)
+{
+    $container-&gt;registerAdvisor(
+        new DefaultPointcutAdvisor(
+            new TrueMethodPointcut(),
+            new MethodBeforeInterceptor(function (MethodInvocation $invocation) {
+                echo "Hello", $invocation-&gt;getMethod()-&gt;name;
+            })
+        ),
+        'test'
+    );
+}
+</code></pre>
+
+<p><code>``
+This patch also optimizes injection of advices (interceptors) into the concrete class, so no more slow</code>serialize()/unserialize()<code>functions, they were replaced by</code>var_export()` and direct injection. I&rsquo;m also thinking about DSL builders for defining pointcuts in a more natural way:</p>
+
+<p>```php</p>
+
+<pre><code>protected function configureAop(AspectContainer $container)
+{
+    $builder = new PointcutBuilder($container);
+    $builder-&gt;before('execution(public **-&gt;get(*)')-&gt;do(function (MethodInvocation $invocation) {
+        echo "Hello", $invocation-&gt;getMethod()-&gt;name;
+    });
+}
+</code></pre>
+
+<p>```
+But this is not included into the current version, please ping me on github if your want it for the next version.</p>
+
+<h3>Annotation class filter</h3>
+
+<p><a href="https://github.com/lisachenko/go-aop-php/pull/129">lisachenko/go-aop-php#128</a></p>
+
+<p>PhpDeal Desing by Contract frameworks requires matching of classes based on presence of annotation in the class docblock. This functionality was missed in the framework. Now it&rsquo;s possible to use special <code>@within(AnnotationClassName)</code> syntax to match classes that have <code>AnnotationClassName</code> annotation.</p>
+
+<p>Here is an example of pointcut that intercepts execution of all public methods in the class marked with <code>Invariant</code> annotation:</p>
+
+<p>```php</p>
+
+<pre><code>/**
+ * Verifies invariants for contract class
+ *
+ * @Around("@within(PhpDeal\Annotation\Invariant) &amp;&amp; execution(public **-&gt;*(*))")
+ * @param MethodInvocation $invocation
+ *
+ * @throws ContractViolation
+ * @return mixed
+ */
+public function invariantContract(MethodInvocation $invocation) {...}
+</code></pre>
+
+<p>```</p>
+
+<h3>Access to a doctrine annotations from the MethodInvocation class</h3>
+
+<p><a href="https://github.com/lisachenko/go-aop-php/issues/66">lisachenko/go-aop-php#66</a></p>
+
+<p>Some aspects can analyze annotation to perform additional steps. Consider the following class where we define a ttl in the annotation for a method:</p>
+
+<p>```php
+use Demo\Annotation\Cacheable;</p>
+
+<p>class General
+{</p>
+
+<pre><code>/**
+ * Test cacheable by annotation
+ *
+ * @Cacheable(time=10)
+ * @param float $timeToSleep Amount of time to sleep
+ *
+ * @return string
+ */
+public function cacheMe($timeToSleep)
+{
+    usleep($timeToSleep * 1e6);
+    return 'Yeah';
+}
+</code></pre>
+
+<p>}
+```</p>
+
+<p>We can easily define a pointcut and advice that will intercept the execution of methods marked with <code>Cacheable</code> annotation and cache their results in the cache for a specified time. Should be cool, isn&rsquo;t it? Let&rsquo;s do this:</p>
+
+<p>```php
+use Demo\Annotation\Cacheable;
+use Go\Aop\Aspect;
+use Go\Aop\Intercept\MethodInvocation;
+use Go\Lang\Annotation\Around;</p>
+
+<p>class CacheAspect implements Aspect
+{</p>
+
+<pre><code>/**
+ * Cacheable methods
+ *
+ * @param MethodInvocation $invocation Invocation
+ *
+ * @Around("@annotation(Demo\Annotation\Cacheable)")
+ */
+public function aroundCacheable(MethodInvocation $invocation)
+{
+    /** @var Cacheable $cacheable */
+    $cacheable = $invocation-&gt;getMethod()-&gt;getAnnotation(Cacheable::class);
+    echo $cacheable-&gt;time; // TTL for the cache
+    return $invocation-&gt;proceed();
+}
+</code></pre>
+
+<p>}
+```</p>
+
+<h3>Simplified pointcut syntax for methods in the same class</h3>
+
+<p><a href="https://github.com/lisachenko/go-aop-php/issues/113">lisachenko/go-aop-php#113</a></p>
+
+<p>Instead of complex pointcut like this:
+<code>
+execution(public **\*Controller-&gt;create(*) )
+|| execution(public **\*Controller-&gt;get(*) )
+|| execution(public **\*Controller-&gt;update(*) )
+|| execution(public **\*Controller-&gt;delete(*) )
+</code></p>
+
+<p>it is possible to use or'ed constructions with <code>|</code> sign:
+<code>
+execution(public **\*Controller-&gt;create|get|update|delete(*))
+</code>
+Much cleaner and more readable!</p>
+
+<h3>Inheritance analysis during load-time</h3>
+
+<p><a href="https://github.com/lisachenko/go-aop-php/issues/131">lisachenko/go-aop-php#131</a></p>
+
+<p>It is not a secret, that framework performs load-time weaving of aspects during loading the source file into PHP. Before PHP will be able to parse it and load, Go! AOP scans tokens and builds reflection to analyze a pointcuts. At that moment of class loading there is no information about full inheritance of class (interfaces, abstract classes, traits). This was known limitation of framework that it wasn&rsquo;t possible to match parent methods in the children class:</p>
+
+<p>```php
+class Greeting
+{</p>
+
+<pre><code>public hello($name)
+{
+    echo "hello $name";
+}
+</code></pre>
+
+<p>}</p>
+
+<p>class Example extends Greeting
+{
+}</p>
+
+<p>// pointcut is @Before(&ldquo;execution(public Example-><em>(</em>))&rdquo;)</p>
+
+<p>$e = new Example();
+$e->hello(&ldquo;User&rdquo;); // advice is not applied, because method is defined in the Greeting class
+```</p>
+
+<p>After some research I found a way to recursively load parent classes and scan tokens. This is the major change for a dessert, but it can have an impact on the current aspects that uses <code>within</code> or similar pointcuts.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Aspect-Oriented programming with Yii]]></title>
@@ -934,258 +1125,6 @@ Go to sleep...&lt;br&gt;
 </code></p>
 
 <p>So, we have implemented logging without changes in the original source code! Have a nice experiments!</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Implementing reusable fluent interface pattern in PHP with AOP]]></title>
-    <link href="http://go.aopphp.com/blog/2013/03/19/implementing-fluent-interface-pattern-in-php/"/>
-    <updated>2013-03-19T22:44:00+04:00</updated>
-    <id>http://go.aopphp.com/blog/2013/03/19/implementing-fluent-interface-pattern-in-php</id>
-    <content type="html"><![CDATA[<p>During software development one of the most important goals is the readability of source code. There are special
-techniques and tips that help us to improve the readability of source code. One of the techniques of improving the
-source code readability is using of fluent interfaces. Let&rsquo;s discuss it in this article.</p>
-
-<!-- more -->
-
-
-<h3>Evolution. From simple to complex.</h3>
-
-<p>Every programmer starts with the language by writing a trivial &ldquo;Hello, world!&rdquo;. After that, it takes several years to
-learn the language and to make clumsy attempts to write his own ORM / CMS / Framework (underline one or several). I
-think that everyone has the code which is better to hide. But without understanding of simple things you will not be
-able to understand the complex ones, so let&rsquo;s start with a simple example and get to the implementation of the &ldquo;fluent&rdquo;
-interface as a separate class using AOP. Those who know this pattern can safely move on to the last part of the article,
-where you can get excellent food for thoughts.</p>
-
-<p>Let&rsquo;s start!</p>
-
-<p>Let&rsquo;s take a simple user entity, which has the following properties: name, last name and the password:</p>
-
-<p><code>php
-&lt;?php
-class User
-{
-    public $name;
-    public $surname;
-    public $password;
-}
-</code>
-An excellent class that is easy to use:
-```php
-&lt;?php
-$user = new User;</p>
-
-<p>$user->name = &lsquo;John&rsquo;;
-$user->surname = &lsquo;Doe&rsquo;;
-$user->password = &lsquo;root&rsquo;;
-```</p>
-
-<p>It is easy to notice that we have no validation and somebody can set a blank password, which is not very good. In
-addition, it would be nice to know that the field values are immutable. These several considerations lead us to the
-idea that properties should be protected or private and access to them should be carried out with a pair of getter / setter.</p>
-
-<p>Suit the action to the word:
-```php
-&lt;?php
-class User
-{</p>
-
-<pre><code>protected $name;
-protected $surname;
-protected $password;
-
-public function setName($name)
-{
-    $this-&gt;name = $name;
-}
-
-public function setSurname($surname)
-{
-    $this-&gt;surname = $surname;
-}
-
-public function setPassword($password)
-{
-    if (!$password) {
-        throw new InvalidArgumentException("Password shouldn't be empty");
-    }
-    $this-&gt;password = $password;
-}
-</code></pre>
-
-<p>}
-<code>
-For the new class the configuration has changed a little and now we are using setters:
-</code>php
-&lt;?php
-$user = new User;</p>
-
-<p>$user->setName(&lsquo;John&rsquo;);
-$user->setSurname(&lsquo;Doe&rsquo;);
-$user->setPassword(&lsquo;root&rsquo;);
-```</p>
-
-<p>Not a big deal, right? But what if we need to set up 20 properties? 30 properties? This code will be flooded with setter
-calls and $user variable references. If the variable name will be $superImportantUser then readability of the source
-code deteriorates further. What can be done to get rid of the copy of the code?</p>
-
-<h3>Fluent interface to the rescue!</h3>
-
-<p>So, we came to the Fluent Interface pattern, which was coined by Eric Evans and Martin Fowler to increase readability of
-source code by simplifying multiple calls to the same object. It is implemented by a chain of methods, transmitting the
-calling context to the following method in the chain. The context is the return value of the method and this value can
-be any object, including the current one.</p>
-
-<p>To implement a fluent interface, we need all the methods-setters to return the current object:
-```php
-&lt;?php
-class User
-{</p>
-
-<pre><code>protected $name;
-protected $surname;
-protected $password;
-
-public function setName($name)
-{
-    $this-&gt;name = $name;
-    return $this;
-}
-
-public function setSurname($surname)
-{
-    $this-&gt;surname = $surname;
-    return $this;
-}
-
-public function setPassword($password)
-{
-    if (!$password) {
-        throw new InvalidArgumentException("Password shouldn't be empty");
-    }
-    $this-&gt;password = $password;
-    return $this;
-}
-</code></pre>
-
-<p>}
-```
-This approach will allow us to make the call chain:</p>
-
-<p><code>php
-&lt;?php
-$user = new User;
-$user-&gt;setName('John')-&gt;setSurname('Doe')-&gt;setPassword('root');
-</code></p>
-
-<p>As you can see, the configuration of the object now takes up less space and is much easier to read. We achieved our
-goal! At this point, many developers will ask: &ldquo;So what?&rdquo; Ok, then try to answer the question: &ldquo;What&rsquo;s wrong with fluent
-interface in this way?&rdquo; before reading the next section.</p>
-
-<h3>So what&rsquo;s bad in it?</h3>
-
-<p>Perhaps you&rsquo;ve failed to find an answer and you&rsquo;ve decided to read further? ) Well, I can reassure you that it&rsquo;s all
-fine with fluent interface in OOP. However, if you think about it, you can find out that it can&rsquo;t be implemented as a
-separate class, interface or trait. So it can&rsquo;t be reused. This results in the fact that we have to put down &ldquo;return
-$this&rdquo; at the end of each method to implement fluent interface. If we have a couple dozen classes with a couple dozen
-methods that we want to do &ldquo;fluent&rdquo; then we have to manually deal with this unpleasant operation.
-This is the classic crosscutting.</p>
-
-<h3>Let&rsquo;s make it in a separate class</h3>
-
-<p>Since we have a crosscutting, we must rise to the level above OOP to describe this pattern. Specification is pretty
-simple: when calling public methods in a class, original object should be returned as the result of the method
-invocation. Of course, we do not want unexpected effects, so let&rsquo;s be clear: methods should be public setters starting
-with &ldquo;set&rdquo; and they should be inside classes that implement FluentInterface marker only . Let&rsquo;s describe this with AOP
-and Go! AOP library.</p>
-
-<p>First of all, our marker interface:</p>
-
-<p>```php
-&lt;?php
-/<em>*
- * Fluent interface marker
- </em>/
-interface FluentInterface
-{</p>
-
-<p>}
-```
-Fluent interface implementation in the form of advice within aspect:</p>
-
-<p>```php
-&lt;?php
-use Go\Aop\Aspect;
-use Go\Aop\Intercept\MethodInvocation;
-use Go\Lang\Annotation\Around;</p>
-
-<p>class FluentInterfaceAspect implements Aspect
-{</p>
-
-<pre><code>/**
- * Fluent interface advice
- *
- * @Around("within(FluentInterface+) &amp;&amp; execution(public **-&gt;set*(*))")
- *
- * @param MethodInvocation $invocation
- * @return mixed|null|object
- */
-protected function aroundMethodExecution(MethodInvocation $invocation)
-{
-    $result = $invocation-&gt;proceed();
-    return $result!==null ? $result : $invocation-&gt;getThis();
-}
-</code></pre>
-
-<p>}
-```</p>
-
-<p>Just a quick explanation &ndash; &ldquo;Around&rdquo; advice sets the hook &ldquo;around&rdquo; the original method and is fully responsible for
-whether the original method will be called or not, and is responsible for the result that will be returned. In the
-advice, we call original method (setter invocation) and if it doesn&rsquo;t return anything we just return the original
-object $invocation->getThis(). That is all ) That is a useful pattern implementation just in a few lines of code. Using
-the fluent interface is now easy and sexy :)</p>
-
-<p>```php
-&lt;?php
-class User implements FluentInterface
-{</p>
-
-<pre><code>protected $name;
-protected $surname;
-protected $password;
-
-public function setName($name)
-{
-    $this-&gt;name = $name;
-}
-
-public function setSurname($surname)
-{
-    $this-&gt;surname = $surname;
-}
-
-public function setPassword($password)
-{
-    if (!$password) {
-        throw new InvalidArgumentException("Password shouldn't be empty");
-    }
-    $this-&gt;password = $password;
-}
-</code></pre>
-
-<p>}
-```
-And usage:</p>
-
-<p><code>php
-&lt;?php
-$user = new User;
-$user-&gt;setName('John')-&gt;setSurname('Doe')-&gt;setPassword('root');
-</code>
-No more copying &ldquo;return $this&rdquo; for hundreds of methods, only pure source code, intuitive FluentInterface and
-implementation of FluentInterface in the form of a simple aspect.</p>
 ]]></content>
   </entry>
   

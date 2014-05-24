@@ -4,7 +4,7 @@
   <title><![CDATA[Category: framework | Go! Aspect-Oriented Framework]]></title>
   <link href="http://go.aopphp.com/blog/categories/framework/atom.xml" rel="self"/>
   <link href="http://go.aopphp.com/"/>
-  <updated>2013-09-28T17:59:49+04:00</updated>
+  <updated>2014-05-24T15:59:31+04:00</updated>
   <id>http://go.aopphp.com/</id>
   <author>
     <name><![CDATA[Lisachenko Alexander]]></name>
@@ -12,6 +12,197 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[What is new in version 0.5.0]]></title>
+    <link href="http://go.aopphp.com/blog/2014/05/24/what-is-new-in-version-0-dot-5-dot-0/"/>
+    <updated>2014-05-24T21:26:00+04:00</updated>
+    <id>http://go.aopphp.com/blog/2014/05/24/what-is-new-in-version-0-dot-5-dot-0</id>
+    <content type="html"><![CDATA[<p>New versions of frameworks are always exciting because they provide more features and can contain important fixes and changes. Go! AOP evolves too, so I prepared this article for users to underline most important changes.</p>
+
+<!-- more -->
+
+
+<p></p>
+
+<h3>Support for custom streams and read-only file systems</h3>
+
+<p><a href="https://github.com/lisachenko/go-aop-php/pull/118">lisachenko/go-aop-php#118</a></p>
+
+<p>This feature is one of the most interesting, because it allows to use framework with any stream filters and wrappers, for example with phar archives. It is possible to generate an AOP cache and put it into the phar archive as a standalone read-only application. Possible usages of aspects in the phar archives are logging, dry-run control and much more. Do you bored with implementation of dry-run option for each command? Just give a try for AOP and define an aspect for that!</p>
+
+<h3>Direct advisors</h3>
+
+<p><a href="https://github.com/lisachenko/go-aop-php/pull/142">lisachenko/go-aop-php#142</a></p>
+
+<p>I received a lot of complains about usage of annotations for defining advices instead of pure PHP code. So I decided to give an alternative way for defining advisors with closures:</p>
+
+<p>```php</p>
+
+<pre><code>protected function configureAop(AspectContainer $container)
+{
+    $container-&gt;registerAdvisor(
+        new DefaultPointcutAdvisor(
+            new TrueMethodPointcut(),
+            new MethodBeforeInterceptor(function (MethodInvocation $invocation) {
+                echo "Hello", $invocation-&gt;getMethod()-&gt;name;
+            })
+        ),
+        'test'
+    );
+}
+</code></pre>
+
+<p><code>``
+This patch also optimizes injection of advices (interceptors) into the concrete class, so no more slow</code>serialize()/unserialize()<code>functions, they were replaced by</code>var_export()` and direct injection. I&rsquo;m also thinking about DSL builders for defining pointcuts in a more natural way:</p>
+
+<p>```php</p>
+
+<pre><code>protected function configureAop(AspectContainer $container)
+{
+    $builder = new PointcutBuilder($container);
+    $builder-&gt;before('execution(public **-&gt;get(*)')-&gt;do(function (MethodInvocation $invocation) {
+        echo "Hello", $invocation-&gt;getMethod()-&gt;name;
+    });
+}
+</code></pre>
+
+<p>```
+But this is not included into the current version, please ping me on github if your want it for the next version.</p>
+
+<h3>Annotation class filter</h3>
+
+<p><a href="https://github.com/lisachenko/go-aop-php/pull/129">lisachenko/go-aop-php#128</a></p>
+
+<p>PhpDeal Desing by Contract frameworks requires matching of classes based on presence of annotation in the class docblock. This functionality was missed in the framework. Now it&rsquo;s possible to use special <code>@within(AnnotationClassName)</code> syntax to match classes that have <code>AnnotationClassName</code> annotation.</p>
+
+<p>Here is an example of pointcut that intercepts execution of all public methods in the class marked with <code>Invariant</code> annotation:</p>
+
+<p>```php</p>
+
+<pre><code>/**
+ * Verifies invariants for contract class
+ *
+ * @Around("@within(PhpDeal\Annotation\Invariant) &amp;&amp; execution(public **-&gt;*(*))")
+ * @param MethodInvocation $invocation
+ *
+ * @throws ContractViolation
+ * @return mixed
+ */
+public function invariantContract(MethodInvocation $invocation) {...}
+</code></pre>
+
+<p>```</p>
+
+<h3>Access to a doctrine annotations from the MethodInvocation class</h3>
+
+<p><a href="https://github.com/lisachenko/go-aop-php/issues/66">lisachenko/go-aop-php#66</a></p>
+
+<p>Some aspects can analyze annotation to perform additional steps. Consider the following class where we define a ttl in the annotation for a method:</p>
+
+<p>```php
+use Demo\Annotation\Cacheable;</p>
+
+<p>class General
+{</p>
+
+<pre><code>/**
+ * Test cacheable by annotation
+ *
+ * @Cacheable(time=10)
+ * @param float $timeToSleep Amount of time to sleep
+ *
+ * @return string
+ */
+public function cacheMe($timeToSleep)
+{
+    usleep($timeToSleep * 1e6);
+    return 'Yeah';
+}
+</code></pre>
+
+<p>}
+```</p>
+
+<p>We can easily define a pointcut and advice that will intercept the execution of methods marked with <code>Cacheable</code> annotation and cache their results in the cache for a specified time. Should be cool, isn&rsquo;t it? Let&rsquo;s do this:</p>
+
+<p>```php
+use Demo\Annotation\Cacheable;
+use Go\Aop\Aspect;
+use Go\Aop\Intercept\MethodInvocation;
+use Go\Lang\Annotation\Around;</p>
+
+<p>class CacheAspect implements Aspect
+{</p>
+
+<pre><code>/**
+ * Cacheable methods
+ *
+ * @param MethodInvocation $invocation Invocation
+ *
+ * @Around("@annotation(Demo\Annotation\Cacheable)")
+ */
+public function aroundCacheable(MethodInvocation $invocation)
+{
+    /** @var Cacheable $cacheable */
+    $cacheable = $invocation-&gt;getMethod()-&gt;getAnnotation(Cacheable::class);
+    echo $cacheable-&gt;time; // TTL for the cache
+    return $invocation-&gt;proceed();
+}
+</code></pre>
+
+<p>}
+```</p>
+
+<h3>Simplified pointcut syntax for methods in the same class</h3>
+
+<p><a href="https://github.com/lisachenko/go-aop-php/issues/113">lisachenko/go-aop-php#113</a></p>
+
+<p>Instead of complex pointcut like this:
+<code>
+execution(public **\*Controller-&gt;create(*) )
+|| execution(public **\*Controller-&gt;get(*) )
+|| execution(public **\*Controller-&gt;update(*) )
+|| execution(public **\*Controller-&gt;delete(*) )
+</code></p>
+
+<p>it is possible to use or'ed constructions with <code>|</code> sign:
+<code>
+execution(public **\*Controller-&gt;create|get|update|delete(*))
+</code>
+Much cleaner and more readable!</p>
+
+<h3>Inheritance analysis during load-time</h3>
+
+<p><a href="https://github.com/lisachenko/go-aop-php/issues/131">lisachenko/go-aop-php#131</a></p>
+
+<p>It is not a secret, that framework performs load-time weaving of aspects during loading the source file into PHP. Before PHP will be able to parse it and load, Go! AOP scans tokens and builds reflection to analyze a pointcuts. At that moment of class loading there is no information about full inheritance of class (interfaces, abstract classes, traits). This was known limitation of framework that it wasn&rsquo;t possible to match parent methods in the children class:</p>
+
+<p>```php
+class Greeting
+{</p>
+
+<pre><code>public hello($name)
+{
+    echo "hello $name";
+}
+</code></pre>
+
+<p>}</p>
+
+<p>class Example extends Greeting
+{
+}</p>
+
+<p>// pointcut is @Before(&ldquo;execution(public Example-><em>(</em>))&rdquo;)</p>
+
+<p>$e = new Example();
+$e->hello(&ldquo;User&rdquo;); // advice is not applied, because method is defined in the Greeting class
+```</p>
+
+<p>After some research I found a way to recursively load parent classes and scan tokens. This is the major change for a dessert, but it can have an impact on the current aspects that uses <code>within</code> or similar pointcuts.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Aspect-Oriented programming with Yii]]></title>
