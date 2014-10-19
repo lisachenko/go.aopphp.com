@@ -4,7 +4,7 @@
   <title><![CDATA[Go! Aspect-Oriented Framework]]></title>
   <link href="http://go.aopphp.com/atom.xml" rel="self"/>
   <link href="http://go.aopphp.com/"/>
-  <updated>2014-05-24T16:33:04+04:00</updated>
+  <updated>2014-10-19T22:15:58+04:00</updated>
   <id>http://go.aopphp.com/</id>
   <author>
     <name><![CDATA[Lisachenko Alexander]]></name>
@@ -12,6 +12,511 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Caching like a PRO]]></title>
+    <link href="http://go.aopphp.com/blog/2014/10/19/caching-like-a-pro/"/>
+    <updated>2014-10-19T21:02:00+04:00</updated>
+    <id>http://go.aopphp.com/blog/2014/10/19/caching-like-a-pro</id>
+    <content type="html"><![CDATA[<p>As web applications become more large-scaled, the questions of performance optimization are more frequently considered in initial design. One of the optimization techniques used extensively is caching. Cache contains pre-processed data which is ready to be used without redoing the processing. This article shows the possible ways of doing caching in PHP, including aspect-oriented approach.</p>
+
+<p>Caching is probably the most known technique in computer science, it appears everywhere: CPU, disk cache buffers, opcode cache, memcache, SQL cache, etc. Since it is contained everywhere, we can&rsquo;t extract it into a single place to keep it under our control. So cache invalidation is one of the hardest things. There is a good quote:</p>
+
+<blockquote><p>There are only two hard things in Computer Science: cache invalidation and naming things.</p><footer><strong>Phil Karlton</strong></footer></blockquote>
+
+
+<p>Let&rsquo;s have a look at caching in the PHP.</p>
+
+<!-- more -->
+
+
+<h3>Caching process</h3>
+
+<p>Ok, what is caching or cache?</p>
+
+<blockquote><p>In computing, a cache is a component that transparently stores data so that future requests for that data can be served faster. The data that is stored within a cache might be values that have been computed earlier or duplicates of original values that are stored elsewhere. If requested data is contained in the cache (cache hit), this request can be served by simply reading the cache, which is comparatively faster. Otherwise (cache miss), the data has to be recomputed or fetched from its original storage location, which is comparatively slower. Hence, the greater the number of requests that can be served from the cache, the faster the overall system performance becomes.</p><footer><strong>Cache (computing)</strong> <cite><a href='http://en.wikipedia.org/wiki/Cache_(computing)'>en.wikipedia.org/wiki/&hellip;</a></cite></footer></blockquote>
+
+
+<p>So, caching is a technique to optimize the performance of a system by storing data in a fast storage. There is nothing difficult here: just take data from a slow data source and put it into a faster data source. The faster and bigger the cache is, the more performance gain we can receive. A question for self-test: how many types of cache do you know in PHP?</p>
+
+<h3>Caching. Elementary.</h3>
+
+<p>Imagine that you have a code in a service class that returns information about something:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="k">class</span> <span class="nc">ImportantService</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'><span class="err">    </span><span class="sd">/**</span>
+</span><span class='line'><span class="sd">     * Returns information about object by its unique identifier</span>
+</span><span class='line'><span class="sd">     *</span>
+</span><span class='line'><span class="sd">     * @return object</span>
+</span><span class='line'><span class="sd">     */</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">function</span> <span class="nf">getInformation</span><span class="p">(</span><span class="nv">$uniqueIdentifier</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="k">return</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">dataSource</span><span class="o">-&gt;</span><span class="na">getOne</span><span class="p">(</span><span class="nv">$uniqueIdentifier</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This service and method is pretty clear, but your boss has just discovered that it takes several seconds to query this information and asks you to fix this. What would you do in order to improve the performance of this method? Of course, the easiest way to do this is to write this data into cache and then just check if there is a record in our cache instead of making hard query to a busy data source server.</p>
+
+<p>At elementary level we can do this easy with memcache extension:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="k">class</span> <span class="nc">ImportantService</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">private</span> <span class="nv">$cache</span> <span class="o">=</span> <span class="k">null</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="err">    </span><span class="sd">/**</span>
+</span><span class='line'><span class="sd">     * Default constructor</span>
+</span><span class='line'><span class="sd">     */</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">function</span> <span class="nf">__construct</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">cache</span> <span class="o">=</span> <span class="nv">$memcache</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Memcache</span><span class="p">();</span>
+</span><span class='line'>        <span class="nv">$memcache</span><span class="o">-&gt;</span><span class="na">addServer</span><span class="p">(</span><span class="s1">&#39;memcache.local&#39;</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="err">    </span><span class="sd">/**</span>
+</span><span class='line'><span class="sd">     * Returns information about object by its unique identifier</span>
+</span><span class='line'><span class="sd">     *</span>
+</span><span class='line'><span class="sd">     * @return object</span>
+</span><span class='line'><span class="sd">     */</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">function</span> <span class="nf">getInformation</span><span class="p">(</span><span class="nv">$uniqueIdentifier</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="nv">$result</span> <span class="o">=</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">cache</span><span class="o">-&gt;</span><span class="na">get</span><span class="p">(</span><span class="nv">$uniqueIdentifier</span><span class="p">);</span>
+</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="nv">$result</span> <span class="o">===</span> <span class="k">false</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>            <span class="nv">$result</span> <span class="o">=</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">dataSource</span><span class="o">-&gt;</span><span class="na">getOne</span><span class="p">(</span><span class="nv">$uniqueIdentifier</span><span class="p">);</span>
+</span><span class='line'>            <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">cache</span><span class="o">-&gt;</span><span class="na">set</span><span class="p">(</span><span class="nv">$uniqueIdentifier</span><span class="p">,</span> <span class="nv">$result</span><span class="p">);</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="k">return</span> <span class="nv">$result</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now we use cache and store results from original data source for future use. On a subsequent query with unique identifier we can take a result from cache and just return it instead of doing hard query. So this code will work faster and this should make your boss happier. However I should put here a warning for beginners not to write code like this. Be more experienced and write code better!</p>
+
+<h3>Caching. Pre-Intermediate.</h3>
+
+<p>What&rsquo;s wrong with the previous example with caching? Ok, there are two issues in it. Firstly, we don&rsquo;t use a <a href="http://en.wikipedia.org/wiki/Dependency_injection">Dependency Injection (DI)</a> to inject instance of cache and we hard-coded cache initialization in constructor. Secondly, we put logic of caching into the original service. This implementation violates <a href="http://en.wikipedia.org/wiki/Single_responsibility_principle">Single Responsibility Principle (SRP)</a> and can cause a lot of problems with testing, as we won&rsquo;t be able to query the information directly from a data source without caching. We may as well violate another principle &ndash; <a href="http://en.wikipedia.org/wiki/Don%27t_repeat_yourself">DRY</a>. This may occur if there are several methods in the class that should be cached, and we write extra lines of code in each method:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="nv">$result</span> <span class="o">=</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">cache</span><span class="o">-&gt;</span><span class="na">get</span><span class="p">(</span><span class="nv">$uniqueIdentifier</span><span class="p">);</span>
+</span><span class='line'><span class="k">if</span> <span class="p">(</span><span class="nv">$result</span> <span class="o">===</span> <span class="k">false</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nv">$result</span> <span class="o">=</span> <span class="o">...</span>
+</span><span class='line'>    <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">cache</span><span class="o">-&gt;</span><span class="na">set</span><span class="p">(</span><span class="nv">$uniqueIdentifier</span><span class="p">,</span> <span class="nv">$result</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">return</span> <span class="nv">$result</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>You can notice that we put the same lines of code everywhere where we need to add caching. This is known as cross-cutting concern. Caching is a typical example of it, and traditional object-oriented paradigm offers only few ways to extract this logic into one place. One of them is proxy pattern: define a class with magic <code>__call()</code> method and wrap an object with caching proxy:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="k">class</span> <span class="nc">CachingProxy</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">private</span> <span class="nv">$cache</span> <span class="o">=</span> <span class="k">null</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">private</span> <span class="nv">$instance</span> <span class="o">=</span> <span class="k">null</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">public</span> <span class="k">function</span> <span class="nf">__construct</span><span class="p">(</span><span class="nx">Memcache</span> <span class="nv">$cache</span><span class="p">,</span> <span class="nv">$instance</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">cache</span>    <span class="o">=</span> <span class="nv">$cache</span><span class="p">;</span>
+</span><span class='line'>        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">instance</span> <span class="o">=</span> <span class="nv">$instance</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">public</span> <span class="k">function</span> <span class="nf">__call</span><span class="p">(</span><span class="nv">$method</span><span class="p">,</span> <span class="nv">$arguments</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="nx">substr</span><span class="p">(</span><span class="nv">$method</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="o">!==</span> <span class="s1">&#39;get&#39;</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>            <span class="nv">$result</span> <span class="o">=</span> <span class="nb">call_user_func_array</span><span class="p">(</span><span class="nv">$method</span><span class="p">,</span> <span class="nv">$arguments</span><span class="p">);</span>
+</span><span class='line'>        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>            <span class="nv">$uniqueId</span> <span class="o">=</span> <span class="nv">$method</span> <span class="o">.</span> <span class="nb">serialize</span><span class="p">(</span><span class="nv">$arguments</span><span class="p">);</span>
+</span><span class='line'>            <span class="nv">$result</span> <span class="o">=</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">cache</span><span class="o">-&gt;</span><span class="na">get</span><span class="p">(</span><span class="nv">$uniqueId</span><span class="p">);</span>
+</span><span class='line'>            <span class="k">if</span> <span class="p">(</span><span class="nv">$result</span> <span class="o">===</span> <span class="k">false</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>                <span class="nv">$result</span> <span class="o">=</span> <span class="nb">call_user_func_array</span><span class="p">(</span><span class="nv">$method</span><span class="p">,</span> <span class="nv">$arguments</span><span class="p">);</span>
+</span><span class='line'>                <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">cache</span><span class="o">-&gt;</span><span class="na">set</span><span class="p">(</span><span class="nv">$uniqueId</span><span class="p">,</span> <span class="nv">$result</span><span class="p">);</span>
+</span><span class='line'>            <span class="p">}</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="k">return</span> <span class="nv">$result</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="nv">$service</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ImportantService</span><span class="p">();</span>
+</span><span class='line'><span class="nv">$cachedService</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">CachingProxy</span><span class="p">(</span><span class="nv">$memcacheInstance</span><span class="p">,</span> <span class="nv">$service</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="nv">$result</span> <span class="o">=</span> <span class="nv">$cachedService</span><span class="o">-&gt;</span><span class="na">getInformation</span><span class="p">(</span><span class="mi">123</span><span class="p">);</span> <span class="c1">// First call goes to a data source</span>
+</span><span class='line'><span class="nv">$more</span>   <span class="o">=</span> <span class="nv">$cachedService</span><span class="o">-&gt;</span><span class="na">getInformation</span><span class="p">(</span><span class="mi">123</span><span class="p">);</span> <span class="c1">// From cache now</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Much better now! We extracted the logic of caching into a separate class and can wrap any instance. Our original service still has transparent logic and doesn&rsquo;t need any instance of cache to work. But this solution has another two issues. The first issue is that proxy slows down execution of each method due to magic <code>__call()</code> and slow <code>call_user_func_array()</code> function. The second issue is more serious. Proxy violates inheritance and <a href="http://en.wikipedia.org/wiki/Liskov_substitution_principle">Liskov Substitution Principle (LSP)</a>. This means that we can&rsquo;t pass an instance of proxy everywhere where original class is expected:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="k">function</span> <span class="nf">expectsImportantService</span><span class="p">(</span><span class="nx">ImportantService</span> <span class="nv">$service</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="nv">$service</span><span class="o">-&gt;</span><span class="na">getInformation</span><span class="p">(</span><span class="mi">123</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="nv">$service</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ImportantService</span><span class="p">();</span>
+</span><span class='line'><span class="nx">expectsImportantService</span><span class="p">(</span><span class="nv">$service</span><span class="p">);</span> <span class="c1">// OK</span>
+</span><span class='line'>
+</span><span class='line'><span class="nv">$cachedService</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">CachingProxy</span><span class="p">(</span><span class="nv">$memcacheInstance</span><span class="p">,</span> <span class="nv">$service</span><span class="p">);</span>
+</span><span class='line'><span class="nx">expectsImportantService</span><span class="p">(</span><span class="nv">$cachedService</span><span class="p">);</span> <span class="c1">// Catchable Fatal Error, expecting instance of ImportantService</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This example shows that caching proxy is not a perfect solution because it is violating typehints and decreasing performance of application. However, it can be used to extract logic of caching into a single class and to keep original classes clean.</p>
+
+<h3>Caching. Intermediate.</h3>
+
+<p>At this level developers understand that caching logic should be separated from original code and LSP should be used. This is possible with decorator pattern, when caching class extends an original service class and overwrites methods to introduce an additional logic. Usually, it is done automatically with reflection and code generation.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="k">class</span> <span class="nc">CachedImportantService</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">private</span> <span class="nv">$cache</span> <span class="o">=</span> <span class="k">null</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="err">    </span><span class="sd">/**</span>
+</span><span class='line'><span class="sd">     * Default constructor</span>
+</span><span class='line'><span class="sd">     */</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">function</span> <span class="nf">__construct</span><span class="p">(</span><span class="nv">$cache</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">cache</span> <span class="o">=</span> <span class="nv">$cache</span>
+</span><span class='line'>        <span class="k">parent</span><span class="o">::</span><span class="na">__construct</span><span class="p">();</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="err">    </span><span class="sd">/**</span>
+</span><span class='line'><span class="sd">     * Returns information about object by its unique identifier</span>
+</span><span class='line'><span class="sd">     *</span>
+</span><span class='line'><span class="sd">     * @return object</span>
+</span><span class='line'><span class="sd">     */</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">function</span> <span class="nf">getInformation</span><span class="p">(</span><span class="nv">$uniqueIdentifier</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="nv">$result</span> <span class="o">=</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">cache</span><span class="o">-&gt;</span><span class="na">get</span><span class="p">(</span><span class="nv">$uniqueIdentifier</span><span class="p">);</span>
+</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="nv">$result</span> <span class="o">===</span> <span class="k">false</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>            <span class="nv">$result</span> <span class="o">=</span> <span class="k">parent</span><span class="o">::</span><span class="na">getInformation</span><span class="p">(</span><span class="nv">$uniqueIdentifier</span><span class="p">);</span> <span class="c1">// call original parent method</span>
+</span><span class='line'>            <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">cache</span><span class="o">-&gt;</span><span class="na">set</span><span class="p">(</span><span class="nv">$uniqueIdentifier</span><span class="p">,</span> <span class="nv">$result</span><span class="p">);</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="k">return</span> <span class="nv">$result</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This solution requires a lot of code generation and it&rsquo;s still duplicated, because we need to override each method that should be cached with our implementation. It also requires to rewrite the source code or adjust definition of service to use an extended <code>CachedImportantService</code> instead of the original one. But we can use a framework for this, for example, there is a nice one <a href="https://github.com/Ocramius/ProxyManager">Ocramius/ProxyManager</a>.</p>
+
+<p>Nevertheless, decorators and proxies can&rsquo;t be used for static methods. Imagine that we have <code>ImportantService::staticGetInformation()</code> method which is used somewhere in the source code:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="k">class</span> <span class="nc">ImportantService</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'><span class="err">    </span><span class="sd">/**</span>
+</span><span class='line'><span class="sd">     * Returns information about object by its unique identifier</span>
+</span><span class='line'><span class="sd">     *</span>
+</span><span class='line'><span class="sd">     * @return object</span>
+</span><span class='line'><span class="sd">     */</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">static</span> <span class="k">function</span> <span class="nf">getInformation</span><span class="p">(</span><span class="nv">$uniqueIdentifier</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="k">return</span> <span class="nx">self</span><span class="o">::</span><span class="nv">$dataSource</span><span class="o">-&gt;</span><span class="na">getOne</span><span class="p">(</span><span class="nv">$uniqueIdentifier</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">function</span> <span class="nf">testStaticMethod</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="nx">ImportantService</span><span class="o">::</span><span class="na">getInformation</span><span class="p">(</span><span class="mi">123</span><span class="p">);</span> <span class="c1">// no way to cache it or to replace with decorator/proxy</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>So, even advanced proxies can&rsquo;t help us extract caching logic for static methods into the proxy/decorator. They won&rsquo;t work for final classes either, because a final class can&rsquo;t be extended.</p>
+
+<h3>Caching. Advanced</h3>
+
+<p>In this article we compared all the possible ways to cache a result for method. Each of them has its own advantages and issues, because object-oriented paradigm doesn&rsquo;t have any instruments for solving cross-cutting problems. Is there a way to get rid of them? We want to achieve the following things:</p>
+
+<ul>
+<li>extract logic of caching into a single class (like with Proxy pattern)</li>
+<li>use Liskov Substitution and Open-Closed Principles</li>
+<li>have an ability to cache static methods and methods in a final class.</li>
+</ul>
+
+
+<p>Now you are ready for aspect-oriented paradigm. AOP was designed to solve such cross-cutting issues in an elegant way with advices, aspects and joinpoints. It performs weaving of custom logic into original methods without changing the source code. Caching logic that we extracted for proxy earlier in the article is a typical body of advice in AOP. Our manual check for methods starting with &ldquo;get&rdquo; is a definition of pointcut in AOP terms. With AOP we can implement caching as follows:
+ &ndash; intercepting execution of static and dynamic methods declared as &ldquo;cacheable&rdquo; in all classes,
+ &ndash; adding an extra check for presence of value in the cache before executing the original method,
+ &ndash; if there isn&rsquo;t any value in the cache, we invoke an original method and store its result in the cache.</p>
+
+<p>My preferred way to declare method as &ldquo;cacheable&rdquo; is to use an annotation.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="k">use</span> <span class="nx">Annotation\Cacheable</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">ImportantService</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'><span class="err">    </span><span class="sd">/**</span>
+</span><span class='line'><span class="sd">     * Returns information about object by its unique identifier</span>
+</span><span class='line'><span class="sd">     * @Cacheable</span>
+</span><span class='line'><span class="sd">     *</span>
+</span><span class='line'><span class="sd">     * @return object</span>
+</span><span class='line'><span class="sd">     */</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">function</span> <span class="nf">getInformation</span><span class="p">(</span><span class="nv">$uniqueIdentifier</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="k">return</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">dataSource</span><span class="o">-&gt;</span><span class="na">getOne</span><span class="p">(</span><span class="nv">$uniqueIdentifier</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Then we just need to define an aspect for caching, that will intercept all methods with <code>Cacheable</code> annotation:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="k">use</span> <span class="nx">Go\Aop\Aspect</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="nx">Go\Aop\Intercept\MethodInvocation</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="nx">Go\Lang\Annotation\Around</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="sd">/**</span>
+</span><span class='line'><span class="sd"> * Caching aspect</span>
+</span><span class='line'><span class="sd"> */</span>
+</span><span class='line'><span class="k">class</span> <span class="nc">CachingAspect</span> <span class="k">implements</span> <span class="nx">Aspect</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">private</span> <span class="nv">$cache</span> <span class="o">=</span> <span class="k">null</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">public</span> <span class="k">function</span> <span class="nf">__construct</span><span class="p">(</span><span class="nx">Memcache</span> <span class="nv">$cache</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">cache</span> <span class="o">=</span> <span class="nv">$cache</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="sd">/**</span>
+</span><span class='line'><span class="sd">     * This advice intercepts the execution of cacheable methods</span>
+</span><span class='line'><span class="sd">     *</span>
+</span><span class='line'><span class="sd">     * The logic is pretty simple: we look for the value in the cache and if we have a cache miss</span>
+</span><span class='line'><span class="sd">     * we then invoke original method and store its result in the cache.</span>
+</span><span class='line'><span class="sd">     *</span>
+</span><span class='line'><span class="sd">     * @param MethodInvocation $invocation Invocation</span>
+</span><span class='line'><span class="sd">     *</span>
+</span><span class='line'><span class="sd">     * @Around(&quot;@annotation(Annotation\Cacheable)&quot;)</span>
+</span><span class='line'><span class="sd">     */</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">function</span> <span class="nf">aroundCacheable</span><span class="p">(</span><span class="nx">MethodInvocation</span> <span class="nv">$invocation</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="nv">$obj</span>   <span class="o">=</span> <span class="nv">$invocation</span><span class="o">-&gt;</span><span class="na">getThis</span><span class="p">();</span>
+</span><span class='line'>        <span class="nv">$class</span> <span class="o">=</span> <span class="nb">is_object</span><span class="p">(</span><span class="nv">$obj</span><span class="p">)</span> <span class="o">?</span> <span class="nb">get_class</span><span class="p">(</span><span class="nv">$obj</span><span class="p">)</span> <span class="o">:</span> <span class="nv">$obj</span><span class="p">;</span>
+</span><span class='line'>        <span class="nv">$key</span>   <span class="o">=</span> <span class="nv">$class</span> <span class="o">.</span> <span class="s1">&#39;:&#39;</span> <span class="o">.</span> <span class="nv">$invocation</span><span class="o">-&gt;</span><span class="na">getMethod</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">name</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="nv">$result</span> <span class="o">=</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">cache</span><span class="o">-&gt;</span><span class="na">get</span><span class="p">(</span><span class="nv">$key</span><span class="p">);</span>
+</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="nv">$result</span> <span class="o">===</span> <span class="k">false</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>            <span class="nv">$result</span> <span class="o">=</span> <span class="nv">$invocation</span><span class="o">-&gt;</span><span class="na">proceed</span><span class="p">();</span>
+</span><span class='line'>            <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">cache</span><span class="o">-&gt;</span><span class="na">set</span><span class="p">(</span><span class="nv">$key</span><span class="p">,</span> <span class="nv">$result</span><span class="p">);</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="k">return</span> <span class="nv">$result</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This aspect then will be registered in the AOP kernel. AOP engine will analyze each loaded class during autoloading and if a method matches the <code>@Around("@annotation(Annotation\Cacheable)")</code> pointcut then AOP will change it on the fly to include a custom logic of invoking an advice. Class name will be preserved, so AOP can easily cache static methods and even methods in final classes.</p>
+
+<p>AOP allows us to extract caching logic into a single method (called &lsquo;advice&rsquo;), it works like a decorator, so we don&rsquo;t slow down methods that are not cached (compared with proxy pattern), moreover, it doesn&rsquo;t repeat the code several times (DRY) and it&rsquo;s an awesome result.</p>
+
+<p>Many developers have doubts about AOP, annotations and pointcut matching ) It&rsquo;s a typical question, so I want to make some clarifications. First of all, pointcut matching is performed only once, there won&rsquo;t be any extra checks during a normal execution of an application. Modified classes are stored in the cache and are friendly for opcode cachers, this means that the performance will be good. Annotations are parsed only once during pointcut matching and are also cached (in case you want to read some values from an annotation inside an advice). Bootstrap time for framework is about 20ms, this should be fast enough for your typical applications.</p>
+
+<p>Assuming that we use AOP for caching of methods which can take several hundreds ms or even up to several seconds to complete, AOP overhead is minimal (20ms bootstrap and several ms for calling an advice). This approach gives a new instrument for developers, it can solve annoying cross-cutting concerns, like caching with simple aspect. Use it! Enjoy It!</p>
+
+<p>PS. There is a demo site on Heroku with caching example: <a href="http://demo.aopphp.com/?showcase=cacheable">http://demo.aopphp.com/?showcase=cacheable</a> You can try it with enabled/disabled AOP (blue button at top).</p>
+
+<p>PSS. If you&rsquo;re looking for a way to use AOP caching with Laravel, visit an article (Spain): <a href="http://blog.carlosgoce.com/realizando-cache-con-aop-en-laravel-4/">http://blog.carlosgoce.com/realizando-cache-con-aop-en-laravel-4/</a></p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[What is new in version 0.5.0]]></title>

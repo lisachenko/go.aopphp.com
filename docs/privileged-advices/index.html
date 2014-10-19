@@ -122,7 +122,36 @@ contains two private data members.</p>
 <span class='line-number'>14</span>
 <span class='line-number'>15</span>
 <span class='line-number'>16</span>
-</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="cp">&lt;?php</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="o">&lt;?</span><span class="nx">php</span>
 </span><span class='line'><span class="k">class</span> <span class="nc">TestPrivileged</span>
 </span><span class='line'><span class="p">{</span>
 </span><span class='line'>    <span class="k">private</span> <span class="k">static</span> <span class="nv">$lastId</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
@@ -136,6 +165,35 @@ contains two private data members.</p>
 </span><span class='line'>    <span class="k">public</span> <span class="k">function</span> <span class="nf">method1</span><span class="p">()</span>
 </span><span class='line'>    <span class="p">{</span>
 </span><span class='line'>        <span class="k">echo</span> <span class="s2">&quot;TestPrivileged.method1&quot;</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">CachingProxy</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">private</span> <span class="nv">$cache</span> <span class="o">=</span> <span class="k">null</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">private</span> <span class="nv">$instance</span> <span class="o">=</span> <span class="k">null</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">public</span> <span class="k">function</span> <span class="nf">__construct</span><span class="p">(</span><span class="nx">Memcache</span> <span class="nv">$cache</span><span class="p">,</span> <span class="nv">$instance</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">cache</span>    <span class="o">=</span> <span class="nv">$cache</span><span class="p">;</span>
+</span><span class='line'>        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">instance</span> <span class="o">=</span> <span class="nv">$instance</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">public</span> <span class="k">function</span> <span class="nf">__call</span><span class="p">(</span><span class="nv">$method</span><span class="p">,</span> <span class="nv">$arguments</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="nx">substr</span><span class="p">(</span><span class="nv">$method</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="o">!==</span> <span class="s1">&#39;get&#39;</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>            <span class="nv">$result</span> <span class="o">=</span> <span class="nb">call_user_func_array</span><span class="p">(</span><span class="nv">$method</span><span class="p">,</span> <span class="nv">$arguments</span><span class="p">);</span>
+</span><span class='line'>        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>            <span class="nv">$uniqueId</span> <span class="o">=</span> <span class="nv">$method</span> <span class="o">.</span> <span class="nb">serialize</span><span class="p">(</span><span class="nv">$arguments</span><span class="p">);</span>
+</span><span class='line'>            <span class="nv">$result</span> <span class="o">=</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">cache</span><span class="o">-&gt;</span><span class="na">get</span><span class="p">(</span><span class="nv">$uniqueId</span><span class="p">);</span>
+</span><span class='line'>            <span class="k">if</span> <span class="p">(</span><span class="nv">$result</span> <span class="o">===</span> <span class="k">false</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>                <span class="nv">$result</span> <span class="o">=</span> <span class="nb">call_user_func_array</span><span class="p">(</span><span class="nv">$method</span><span class="p">,</span> <span class="nv">$arguments</span><span class="p">);</span>
+</span><span class='line'>                <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">cache</span><span class="o">-&gt;</span><span class="na">set</span><span class="p">(</span><span class="nv">$uniqueId</span><span class="p">,</span> <span class="nv">$result</span><span class="p">);</span>
+</span><span class='line'>            <span class="p">}</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="k">return</span> <span class="nv">$result</span><span class="p">;</span>
 </span><span class='line'>    <span class="p">}</span>
 </span><span class='line'><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure>
@@ -245,8 +303,6 @@ without error and behaves as expected:</p>
 </span></code></pre></td></tr></table></div></figure>
 
 
-
-
 <figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 </pre></td><td class='code'><pre><code class=''><span class='line'>PrivilegeTestAspect:before objectId=0
@@ -321,7 +377,7 @@ more important to understand the negative implications of using this technique.<
   
 
 
-<time datetime="2013-06-22T11:26:00+04:00" pubdate data-updated="true">Jun 22<span>nd</span>, 2013</time>
+<time datetime="2013-06-22T11:26:00+04:00" pubdate data-updated="true">Jun 22<sup>nd</sup>, 2013</time>
         
       </p>
       
@@ -357,6 +413,10 @@ more important to understand the negative implications of using this technique.<
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/10/19/caching-like-a-pro/">Caching like a PRO</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/05/24/what-is-new-in-version-0-dot-5-dot-0/">What is new in version 0.5.0</a>
       </li>
     
@@ -370,10 +430,6 @@ more important to understand the negative implications of using this technique.<
     
       <li class="post">
         <a href="/blog/2013/07/21/implementing-logging-aspect-with-doctrine-annotations/">Implementing logging aspect with Doctrine annotations</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/06/02/application-level-logging-with-aop-and-monolog/">Application-level logging with AOP and Monolog</a>
       </li>
     
   </ul>
