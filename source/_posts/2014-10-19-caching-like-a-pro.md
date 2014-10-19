@@ -8,7 +8,8 @@ keywords: caching, php, aop, annotations
 description: |
     As web applications become more large-scaled, the questions of performance optimization are more frequently considered in initial design. One of the optimization techniques used extensively is caching. Cache contains pre-processed data which is ready to be used without redoing the processing. This article shows the possible ways of doing caching in PHP, including aspect-oriented approach.
 ---
-    As web applications become more large-scaled, the questions of performance optimization are more frequently considered in initial design. One of the optimization techniques used extensively is caching. Cache contains pre-processed data which is ready to be used without redoing the processing. This article shows the possible ways of doing caching in PHP, including aspect-oriented approach.
+
+As web applications become more large-scaled, the questions of performance optimization are more frequently considered in initial design. One of the optimization techniques used extensively is caching. Cache contains pre-processed data which is ready to be used without redoing the processing. This article shows the possible ways of doing caching in PHP, including aspect-oriented approach.
 
 Caching is probably the most known technique in computer science, it appears everywhere: CPU, disk cache buffers, opcode cache, memcache, SQL cache, etc. Since it is contained everywhere, we can't extract it into a single place to keep it under our control. So cache invalidation is one of the hardest things. There is a good quote:
 
@@ -100,7 +101,7 @@ if ($result === false) {
 return $result;
 ```
 
-You can notice that we put the same lines of code everywhere where we need to add caching. This is known as cross-cutting concern. Caching is a typical example of it, and traditional object-oriented paradigm offers only few ways to extract this logic into one place. One of them is proxy pattern: define a class with magic __call() method and wrap an object with caching proxy:
+You can notice that we put the same lines of code everywhere where we need to add caching. This is known as cross-cutting concern. Caching is a typical example of it, and traditional object-oriented paradigm offers only few ways to extract this logic into one place. One of them is proxy pattern: define a class with magic `__call()` method and wrap an object with caching proxy:
 
 ```php
 class CachingProxy
@@ -138,7 +139,7 @@ $result = $cachedService->getInformation(123); // First call goes to a data sour
 $more   = $cachedService->getInformation(123); // From cache now
 ```
 
-Much better now! We extracted the logic of caching into a separate class and can wrap any instance. Our original service still has transparent logic and doesn't need any instance of cache to work. But this solution has another two issues. The first issue is that proxy slows down execution of each method due to magic __call() and slow call_user_func_array() function. The second issue is more serious. Proxy violates inheritance and [Liskov Substitution Principle (LSP)](http://en.wikipedia.org/wiki/Liskov_substitution_principle). This means that we can't pass an instance of proxy everywhere where original class is expected:
+Much better now! We extracted the logic of caching into a separate class and can wrap any instance. Our original service still has transparent logic and doesn't need any instance of cache to work. But this solution has another two issues. The first issue is that proxy slows down execution of each method due to magic `__call()` and slow `call_user_func_array()` function. The second issue is more serious. Proxy violates inheritance and [Liskov Substitution Principle (LSP)](http://en.wikipedia.org/wiki/Liskov_substitution_principle). This means that we can't pass an instance of proxy everywhere where original class is expected:
 
 ```php
 function expectsImportantService(ImportantService $service) 
@@ -192,9 +193,9 @@ class CachedImportantService
 }
 ```
 
-This solution requires a lot of code generation and it's still duplicated, because we need to override each method that should be cached with our implementation. It also requires to rewrite the source code or adjust definition of service to use an extended CachedImportantService instead of the original one. But we can use a framework for this, for example, there is a nice one [Ocramius/ProxyManager](https://github.com/Ocramius/ProxyManager).
+This solution requires a lot of code generation and it's still duplicated, because we need to override each method that should be cached with our implementation. It also requires to rewrite the source code or adjust definition of service to use an extended `CachedImportantService` instead of the original one. But we can use a framework for this, for example, there is a nice one [Ocramius/ProxyManager](https://github.com/Ocramius/ProxyManager).
 
-Nevertheless, decorators and proxies can't be used for static methods. Imagine that we have ImportantService::staticGetInformation() method which is used somewhere in the source code:
+Nevertheless, decorators and proxies can't be used for static methods. Imagine that we have `ImportantService::staticGetInformation()` method which is used somewhere in the source code:
 
 ```php
 class ImportantService
@@ -251,7 +252,7 @@ class ImportantService
 }
 ```
 
-Then we just need to define an aspect for caching, that will intercept all methods with "Cacheable" annotation:
+Then we just need to define an aspect for caching, that will intercept all methods with `Cacheable` annotation:
 
 ```php
 use Go\Aop\Aspect;
@@ -297,7 +298,7 @@ class CachingAspect implements Aspect
 }
 ```
 
-This aspect then will be registered in the AOP kernel. AOP engine will analyze each loaded class during autoloading and if a method matches the @Around("@annotation(Annotation\Cacheable)") pointcut then AOP will change it on the fly to include a custom logic of invoking an advice. Class name will be preserved, so AOP can easily cache static methods and even methods in final classes.
+This aspect then will be registered in the AOP kernel. AOP engine will analyze each loaded class during autoloading and if a method matches the `@Around("@annotation(Annotation\Cacheable)")` pointcut then AOP will change it on the fly to include a custom logic of invoking an advice. Class name will be preserved, so AOP can easily cache static methods and even methods in final classes.
 
 AOP allows us to extract caching logic into a single method (called 'advice'), it works like a decorator, so we don't slow down methods that are not cached (compared with proxy pattern), moreover, it doesn't repeat the code several times (DRY) and it's an awesome result.
 
