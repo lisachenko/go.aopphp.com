@@ -162,7 +162,7 @@ At this level developers understand that caching logic should be separated from 
 
 ```php
 
-class CachedImportantService
+class CachedImportantService extends ImportantService
 {
     private $cache = null;
 
