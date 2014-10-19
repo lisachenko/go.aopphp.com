@@ -59,63 +59,63 @@
   
   <url>
     <loc>http://go.aopphp.com/blog/archives/</loc>
-    <lastmod>2014-10-19T22:15:58+04:00</lastmod>
+    <lastmod>2014-10-19T22:31:23+04:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   
   <url>
     <loc>http://go.aopphp.com/</loc>
-    <lastmod>2014-10-19T22:15:58+04:00</lastmod>
+    <lastmod>2014-10-19T22:31:23+04:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   
   <url>
     <loc>http://go.aopphp.com/search/</loc>
-    <lastmod>2014-10-19T22:15:58+04:00</lastmod>
+    <lastmod>2014-10-19T22:31:23+04:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   
   <url>
     <loc>http://go.aopphp.com/docs/initial-configuration/</loc>
-    <lastmod>2014-10-19T22:15:58+04:00</lastmod>
+    <lastmod>2014-10-19T22:31:23+04:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   
   <url>
     <loc>http://go.aopphp.com/docs/</loc>
-    <lastmod>2014-10-19T22:15:58+04:00</lastmod>
+    <lastmod>2014-10-19T22:31:23+04:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   
   <url>
     <loc>http://go.aopphp.com/docs/pointcuts-and-advices/</loc>
-    <lastmod>2014-10-19T22:15:58+04:00</lastmod>
+    <lastmod>2014-10-19T22:31:23+04:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   
   <url>
     <loc>http://go.aopphp.com/docs/introduction/</loc>
-    <lastmod>2014-10-19T22:15:58+04:00</lastmod>
+    <lastmod>2014-10-19T22:31:23+04:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   
   <url>
     <loc>http://go.aopphp.com/docs/installation/</loc>
-    <lastmod>2014-10-19T22:15:58+04:00</lastmod>
+    <lastmod>2014-10-19T22:31:23+04:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   
   <url>
     <loc>http://go.aopphp.com/docs/privileged-advices/</loc>
-    <lastmod>2014-10-19T22:15:58+04:00</lastmod>
+    <lastmod>2014-10-19T22:31:23+04:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>

@@ -4,7 +4,7 @@
   <title><![CDATA[Category: aop | Go! Aspect-Oriented Framework]]></title>
   <link href="http://go.aopphp.com/blog/categories/aop/atom.xml" rel="self"/>
   <link href="http://go.aopphp.com/"/>
-  <updated>2014-10-19T22:15:58+04:00</updated>
+  <updated>2014-10-19T22:31:23+04:00</updated>
   <id>http://go.aopphp.com/</id>
   <author>
     <name><![CDATA[Lisachenko Alexander]]></name>
@@ -187,7 +187,7 @@ expectsImportantService($cachedService); // Catchable Fatal Error, expecting ins
 
 <p>```php</p>
 
-<p>class CachedImportantService
+<p>class CachedImportantService extends ImportantService
 {</p>
 
 <pre><code>private $cache = null;
