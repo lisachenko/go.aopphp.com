@@ -4,7 +4,7 @@
   <title><![CDATA[Category: aop | Go! Aspect-Oriented Framework]]></title>
   <link href="http://go.aopphp.com/blog/categories/aop/atom.xml" rel="self"/>
   <link href="http://go.aopphp.com/"/>
-  <updated>2014-10-19T22:31:23+04:00</updated>
+  <updated>2014-10-19T22:33:45+04:00</updated>
   <id>http://go.aopphp.com/</id>
   <author>
     <name><![CDATA[Lisachenko Alexander]]></name>
@@ -268,10 +268,14 @@ public static function getInformation($uniqueIdentifier)
 </ul>
 
 
-<p>Now you are ready for aspect-oriented paradigm. AOP was designed to solve such cross-cutting issues in an elegant way with advices, aspects and joinpoints. It performs weaving of custom logic into original methods without changing the source code. Caching logic that we extracted for proxy earlier in the article is a typical body of advice in AOP. Our manual check for methods starting with &ldquo;get&rdquo; is a definition of pointcut in AOP terms. With AOP we can implement caching as follows:
- &ndash; intercepting execution of static and dynamic methods declared as &ldquo;cacheable&rdquo; in all classes,
- &ndash; adding an extra check for presence of value in the cache before executing the original method,
- &ndash; if there isn&rsquo;t any value in the cache, we invoke an original method and store its result in the cache.</p>
+<p>Now you are ready for aspect-oriented paradigm. AOP was designed to solve such cross-cutting issues in an elegant way with advices, aspects and joinpoints. It performs weaving of custom logic into original methods without changing the source code. Caching logic that we extracted for proxy earlier in the article is a typical body of advice in AOP. Our manual check for methods starting with &ldquo;get&rdquo; is a definition of pointcut in AOP terms. With AOP we can implement caching as follows:</p>
+
+<ul>
+<li>intercepting execution of static and dynamic methods declared as &ldquo;cacheable&rdquo; in all classes,</li>
+<li>adding an extra check for presence of value in the cache before executing the original method,</li>
+<li>if there isn&rsquo;t any value in the cache, we invoke an original method and store its result in the cache.</li>
+</ul>
+
 
 <p>My preferred way to declare method as &ldquo;cacheable&rdquo; is to use an annotation.</p>
 
