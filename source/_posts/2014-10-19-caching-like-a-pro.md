@@ -227,7 +227,8 @@ In this article we compared all the possible ways to cache a result for method. 
  - use Liskov Substitution and Open-Closed Principles
  - have an ability to cache static methods and methods in a final class.
  
-Now you are ready for aspect-oriented paradigm. AOP was designed to solve such cross-cutting issues in an elegant way with advices, aspects and joinpoints. It performs weaving of custom logic into original methods without changing the source code. Caching logic that we extracted for proxy earlier in the article is a typical body of advice in AOP. Our manual check for methods starting with "get" is a definition of pointcut in AOP terms. With AOP we can implement caching as follows: 
+Now you are ready for aspect-oriented paradigm. AOP was designed to solve such cross-cutting issues in an elegant way with advices, aspects and joinpoints. It performs weaving of custom logic into original methods without changing the source code. Caching logic that we extracted for proxy earlier in the article is a typical body of advice in AOP. Our manual check for methods starting with "get" is a definition of pointcut in AOP terms. With AOP we can implement caching as follows:
+
  - intercepting execution of static and dynamic methods declared as "cacheable" in all classes,
  - adding an extra check for presence of value in the cache before executing the original method,
  - if there isn't any value in the cache, we invoke an original method and store its result in the cache.
