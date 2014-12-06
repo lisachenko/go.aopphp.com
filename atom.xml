@@ -4,7 +4,7 @@
   <title><![CDATA[Go! Aspect-Oriented Framework]]></title>
   <link href="http://go.aopphp.com/atom.xml" rel="self"/>
   <link href="http://go.aopphp.com/"/>
-  <updated>2014-10-19T22:33:45+04:00</updated>
+  <updated>2014-12-06T23:46:13+03:00</updated>
   <id>http://go.aopphp.com/</id>
   <author>
     <name><![CDATA[Lisachenko Alexander]]></name>
@@ -16,7 +16,7 @@
   <entry>
     <title type="html"><![CDATA[Caching like a PRO]]></title>
     <link href="http://go.aopphp.com/blog/2014/10/19/caching-like-a-pro/"/>
-    <updated>2014-10-19T21:02:00+04:00</updated>
+    <updated>2014-10-19T20:02:00+03:00</updated>
     <id>http://go.aopphp.com/blog/2014/10/19/caching-like-a-pro</id>
     <content type="html"><![CDATA[<p>As web applications become more large-scaled, the questions of performance optimization are more frequently considered in initial design. One of the optimization techniques used extensively is caching. Cache contains pre-processed data which is ready to be used without redoing the processing. This article shows the possible ways of doing caching in PHP, including aspect-oriented approach.</p>
 
@@ -141,7 +141,7 @@
 
 <h3>Caching. Pre-Intermediate.</h3>
 
-<p>What&rsquo;s wrong with the previous example with caching? Ok, there are two issues in it. Firstly, we don&rsquo;t use a <a href="http://en.wikipedia.org/wiki/Dependency_injection">Dependency Injection (DI)</a> to inject instance of cache and we hard-coded cache initialization in constructor. Secondly, we put logic of caching into the original service. This implementation violates <a href="http://en.wikipedia.org/wiki/Single_responsibility_principle">Single Responsibility Principle (SRP)</a> and can cause a lot of problems with testing, as we won&rsquo;t be able to query the information directly from a data source without caching. We may as well violate another principle &ndash; <a href="http://en.wikipedia.org/wiki/Don%27t_repeat_yourself">DRY</a>. This may occur if there are several methods in the class that should be cached, and we write extra lines of code in each method:</p>
+<p>What&rsquo;s wrong with the previous example with caching? Ok, there are two issues in it. Firstly, we don&rsquo;t use a <a href="http://en.wikipedia.org/wiki/Dependency_injection">Dependency Injection (DI)</a> to inject instance of cache and we hard-coded cache initialization in constructor. Secondly, we put logic of caching into the original service. This implementation violates <a href="http://en.wikipedia.org/wiki/Single_responsibility_principle">Single Responsibility Principle (SRP)</a> and can cause a lot of problems with testing, as we won&rsquo;t be able to query the information directly from a data source without caching. We may as well violate another principle - <a href="http://en.wikipedia.org/wiki/Don%27t_repeat_yourself">DRY</a>. This may occur if there are several methods in the class that should be cached, and we write extra lines of code in each method:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -525,7 +525,7 @@
   <entry>
     <title type="html"><![CDATA[What is new in version 0.5.0]]></title>
     <link href="http://go.aopphp.com/blog/2014/05/24/what-is-new-in-version-0-dot-5-dot-0/"/>
-    <updated>2014-05-24T21:26:00+04:00</updated>
+    <updated>2014-05-24T21:26:00+03:00</updated>
     <id>http://go.aopphp.com/blog/2014/05/24/what-is-new-in-version-0-dot-5-dot-0</id>
     <content type="html"><![CDATA[<p>New versions of frameworks are always exciting because they provide more features and can contain important fixes and changes. Go! AOP evolves too, so I prepared this article for users to underline most important changes.</p>
 
@@ -793,7 +793,7 @@
   <entry>
     <title type="html"><![CDATA[Aspect-Oriented programming with Yii]]></title>
     <link href="http://go.aopphp.com/blog/2013/09/28/aspect-oriented-programming-with-yii/"/>
-    <updated>2013-09-28T16:28:00+04:00</updated>
+    <updated>2013-09-28T16:28:00+03:00</updated>
     <id>http://go.aopphp.com/blog/2013/09/28/aspect-oriented-programming-with-yii</id>
     <content type="html"><![CDATA[<p>Aspect-Oriented programming becomes more popular for PHP, but it requires good knowledge of OOP and can be very cumbersome for beginners. So it&rsquo;s important to have a working examples and manuals to have a possibility to run it locally with favorite framework. Go! AOP provides all the necessary functionality for configuration of AOP into any frameworks, but integration process can be very tricky, so configuration is not so easy. In this article we will configure a working example for Yii framework.</p>
 
@@ -1102,7 +1102,7 @@
   <entry>
     <title type="html"><![CDATA[Intercepting execution of system functions in PHP]]></title>
     <link href="http://go.aopphp.com/blog/2013/08/24/intercepting-execution-of-system-functions-in-php/"/>
-    <updated>2013-08-24T17:00:00+04:00</updated>
+    <updated>2013-08-24T17:00:00+03:00</updated>
     <id>http://go.aopphp.com/blog/2013/08/24/intercepting-execution-of-system-functions-in-php</id>
     <content type="html"><![CDATA[<p>Intercepting an execution of methods is one of the most common tasks for AOP. In the Java world there are a lot of articles that has a detailed examples for transactional control, logging, authorization, etc. But all AOP stuff in Java is related only to the classes and objects, because functions are not first-class citizens in Java whereas PHP has a good support for functions. By using some tricks we can create a proxies for system functions and add our own interceptors with custom logic. This article will show you how to use AOP techniques with functions in PHP.</p>
 
@@ -1373,7 +1373,7 @@ Look at the screenshot from ZF2 framework:</p>
   <entry>
     <title type="html"><![CDATA[Implementing logging aspect with Doctrine annotations]]></title>
     <link href="http://go.aopphp.com/blog/2013/07/21/implementing-logging-aspect-with-doctrine-annotations/"/>
-    <updated>2013-07-21T22:38:00+04:00</updated>
+    <updated>2013-07-21T22:38:00+03:00</updated>
     <id>http://go.aopphp.com/blog/2013/07/21/implementing-logging-aspect-with-doctrine-annotations</id>
     <content type="html"><![CDATA[<p>Logging is probably the most mentioned sweet example of AOP. Probably because it is the simplest and most straightforward example most people can think of. So I want to show you the easiest ever way to implement logging in PHP with annotations. This article is the second part of my previous article about <a href="http://go.aopphp.com/blog/2013/06/02/application-level-logging-with-aop-and-monolog/">application-level logging with AOP in PHP</a> and if you haven&rsquo;t read it yet please do this before proceeding to this article.</p>
 
@@ -1830,7 +1830,7 @@ Look at the screenshot from ZF2 framework:</p>
   <entry>
     <title type="html"><![CDATA[Application-level logging with AOP and Monolog]]></title>
     <link href="http://go.aopphp.com/blog/2013/06/02/application-level-logging-with-aop-and-monolog/"/>
-    <updated>2013-06-02T13:50:00+04:00</updated>
+    <updated>2013-06-02T13:50:00+03:00</updated>
     <id>http://go.aopphp.com/blog/2013/06/02/application-level-logging-with-aop-and-monolog</id>
     <content type="html"><![CDATA[<p>So you got finished with your brand new website. It is completely PHP driven and looks very nice. But are you sure that
 everything works perfectly? Under every circumstances?</p>
@@ -1842,7 +1842,7 @@ probably don’t need an error log file.</p>
 <!-- more -->
 
 
-<p>If you decide to to write the logs, then you definitely choose the best tool for this &ndash; <a href="https://github.com/Seldaek/monolog">Monolog</a>.
+<p>If you decide to to write the logs, then you definitely choose the best tool for this - <a href="https://github.com/Seldaek/monolog">Monolog</a>.
 Monolog is used by such frameworks as Symfony2, Silex, Laravel4, PPI and can be easily integrated into custom application.</p>
 
 <p>But even such a great tool like Monolog can not help us with encapsulating the logging into separate class, because
@@ -2013,7 +2013,7 @@ Typically this is looking like this:</p>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>There is one more question to solve: &ldquo;how to specify concrete methods?&rdquo;. This is known as a pointcut &ndash; the term given to the point of execution in the application at which cross-cutting concern needs to be applied.</p>
+<p>There is one more question to solve: &ldquo;how to specify concrete methods?&rdquo;. This is known as a pointcut - the term given to the point of execution in the application at which cross-cutting concern needs to be applied.</p>
 
 <p>Go! framework uses annotations for defining pointcuts. Pointcut syntax is like an SQL for the source code. To intercept each public and protected method in the class we can use &ldquo;within&rdquo; pointcut:</p>
 
@@ -2214,7 +2214,7 @@ Typically this is looking like this:</p>
   <entry>
     <title type="html"><![CDATA[Implementing reusable fluent interface pattern in PHP with AOP]]></title>
     <link href="http://go.aopphp.com/blog/2013/03/19/implementing-fluent-interface-pattern-in-php/"/>
-    <updated>2013-03-19T22:44:00+04:00</updated>
+    <updated>2013-03-19T22:44:00+03:00</updated>
     <id>http://go.aopphp.com/blog/2013/03/19/implementing-fluent-interface-pattern-in-php</id>
     <content type="html"><![CDATA[<p>During software development one of the most important goals is the readability of source code. There are special
 techniques and tips that help us to improve the readability of source code. One of the techniques of improving the
@@ -2518,7 +2518,7 @@ and Go! AOP library.</p>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>Just a quick explanation &ndash; &ldquo;Around&rdquo; advice sets the hook &ldquo;around&rdquo; the original method and is fully responsible for
+<p>Just a quick explanation - &ldquo;Around&rdquo; advice sets the hook &ldquo;around&rdquo; the original method and is fully responsible for
 whether the original method will be called or not, and is responsible for the result that will be returned. In the
 advice, we call original method (setter invocation) and if it doesn&rsquo;t return anything we just return the original
 object $invocation->getThis(). That is all ) That is a useful pattern implementation just in a few lines of code. Using
@@ -2596,7 +2596,7 @@ implementation of FluentInterface in the form of a simple aspect.</p>
   <entry>
     <title type="html"><![CDATA[Aspect-Oriented Framework for PHP]]></title>
     <link href="http://go.aopphp.com/blog/2013/02/11/aspect-oriented-framework-for-php/"/>
-    <updated>2013-02-11T22:55:00+04:00</updated>
+    <updated>2013-02-11T22:55:00+03:00</updated>
     <id>http://go.aopphp.com/blog/2013/02/11/aspect-oriented-framework-for-php</id>
     <content type="html"><![CDATA[<p>Go! is a PHP 5.4 framework based on OOP and AOP paradigms and designed by Lisachenko Alexander.
 It allows developers to add support of AOP to every PHP application.</p>
@@ -2626,7 +2626,7 @@ behavior that is executed before, after, or &ldquo;around&rdquo; a join point is
   <entry>
     <title type="html"><![CDATA[SymfonyCampUA-2012 presentation]]></title>
     <link href="http://go.aopphp.com/blog/2012/12/02/symfonycampua-2012-presentation-about-weaving-of-aspects-with-go-aop-library/"/>
-    <updated>2012-12-02T00:00:00+04:00</updated>
+    <updated>2012-12-02T00:00:00+03:00</updated>
     <id>http://go.aopphp.com/blog/2012/12/02/symfonycampua-2012-presentation-about-weaving-of-aspects-with-go-aop-library</id>
     <content type="html"><![CDATA[<iframe src="http://www.slideshare.net/slideshow/embed_code/15487433?rel=0" width="597" height="486" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC;border-width:1px 1px 0;margin-bottom:5px" allowfullscreen webkitallowfullscreen mozallowfullscreen>
 </iframe>

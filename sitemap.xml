@@ -1,124 +1,108 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  
-  
   <url>
     <loc>http://go.aopphp.com/blog/2014/10/19/caching-like-a-pro/</loc>
-    <lastmod>2014-10-19T21:02:00+04:00</lastmod>
+    <lastmod>2014-10-19T20:02:00+03:00</lastmod>
     <priority>0.8</priority>
   </url>
-  
   <url>
     <loc>http://go.aopphp.com/blog/2014/05/24/what-is-new-in-version-0-dot-5-dot-0/</loc>
-    <lastmod>2014-05-24T21:26:00+04:00</lastmod>
+    <lastmod>2014-05-24T21:26:00+03:00</lastmod>
     <priority>0.8</priority>
   </url>
-  
   <url>
     <loc>http://go.aopphp.com/blog/2013/09/28/aspect-oriented-programming-with-yii/</loc>
-    <lastmod>2013-09-28T16:28:00+04:00</lastmod>
+    <lastmod>2013-09-28T16:28:00+03:00</lastmod>
     <priority>0.8</priority>
   </url>
-  
   <url>
     <loc>http://go.aopphp.com/blog/2013/08/24/intercepting-execution-of-system-functions-in-php/</loc>
-    <lastmod>2013-08-24T17:00:00+04:00</lastmod>
+    <lastmod>2013-08-24T17:00:00+03:00</lastmod>
     <priority>0.8</priority>
   </url>
-  
   <url>
     <loc>http://go.aopphp.com/blog/2013/07/21/implementing-logging-aspect-with-doctrine-annotations/</loc>
-    <lastmod>2013-07-21T22:38:00+04:00</lastmod>
+    <lastmod>2013-07-21T22:38:00+03:00</lastmod>
     <priority>0.8</priority>
   </url>
-  
   <url>
     <loc>http://go.aopphp.com/blog/2013/06/02/application-level-logging-with-aop-and-monolog/</loc>
-    <lastmod>2013-06-02T13:50:00+04:00</lastmod>
+    <lastmod>2013-06-02T13:50:00+03:00</lastmod>
     <priority>0.8</priority>
   </url>
-  
   <url>
     <loc>http://go.aopphp.com/blog/2013/03/19/implementing-fluent-interface-pattern-in-php/</loc>
-    <lastmod>2013-03-19T22:44:00+04:00</lastmod>
+    <lastmod>2013-03-19T22:44:00+03:00</lastmod>
     <priority>0.8</priority>
   </url>
-  
   <url>
     <loc>http://go.aopphp.com/blog/2013/02/11/aspect-oriented-framework-for-php/</loc>
-    <lastmod>2013-02-11T22:55:00+04:00</lastmod>
+    <lastmod>2013-02-11T22:55:00+03:00</lastmod>
     <priority>0.8</priority>
   </url>
-  
   <url>
     <loc>http://go.aopphp.com/blog/2012/12/02/symfonycampua-2012-presentation-about-weaving-of-aspects-with-go-aop-library/</loc>
-    <lastmod>2012-12-02T00:00:00+04:00</lastmod>
+    <lastmod>2012-12-02T00:00:00+03:00</lastmod>
     <priority>0.8</priority>
   </url>
-  
-  
   <url>
     <loc>http://go.aopphp.com/blog/archives/</loc>
-    <lastmod>2014-10-19T22:33:45+04:00</lastmod>
+    <lastmod>2014-12-06T23:46:13+03:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
-  
   <url>
     <loc>http://go.aopphp.com/</loc>
-    <lastmod>2014-10-19T22:33:45+04:00</lastmod>
+    <lastmod>2014-12-06T23:46:13+03:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
-  
   <url>
     <loc>http://go.aopphp.com/search/</loc>
-    <lastmod>2014-10-19T22:33:45+04:00</lastmod>
+    <lastmod>2014-12-06T23:46:13+03:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
-  
-  <url>
-    <loc>http://go.aopphp.com/docs/initial-configuration/</loc>
-    <lastmod>2014-10-19T22:33:45+04:00</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  
   <url>
     <loc>http://go.aopphp.com/docs/</loc>
-    <lastmod>2014-10-19T22:33:45+04:00</lastmod>
+    <lastmod>2014-12-06T23:46:13+03:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
-  
   <url>
-    <loc>http://go.aopphp.com/docs/pointcuts-and-advices/</loc>
-    <lastmod>2014-10-19T22:33:45+04:00</lastmod>
+    <loc>http://go.aopphp.com/docs/initial-configuration/</loc>
+    <lastmod>2014-12-06T23:46:13+03:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
-  
-  <url>
-    <loc>http://go.aopphp.com/docs/introduction/</loc>
-    <lastmod>2014-10-19T22:33:45+04:00</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  
   <url>
     <loc>http://go.aopphp.com/docs/installation/</loc>
-    <lastmod>2014-10-19T22:33:45+04:00</lastmod>
+    <lastmod>2014-12-06T23:46:13+03:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
-  
+  <url>
+    <loc>http://go.aopphp.com/docs/pointcuts-and-advices/</loc>
+    <lastmod>2014-12-06T23:46:13+03:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>http://go.aopphp.com/docs/pointcut-reference/</loc>
+    <lastmod>2014-12-06T23:46:13+03:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>http://go.aopphp.com/docs/introduction/</loc>
+    <lastmod>2014-12-06T23:46:13+03:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
   <url>
     <loc>http://go.aopphp.com/docs/privileged-advices/</loc>
-    <lastmod>2014-10-19T22:33:45+04:00</lastmod>
+    <lastmod>2014-12-06T23:46:13+03:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
-  
-  
 </urlset>

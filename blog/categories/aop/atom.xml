@@ -4,7 +4,7 @@
   <title><![CDATA[Category: aop | Go! Aspect-Oriented Framework]]></title>
   <link href="http://go.aopphp.com/blog/categories/aop/atom.xml" rel="self"/>
   <link href="http://go.aopphp.com/"/>
-  <updated>2014-10-19T22:33:45+04:00</updated>
+  <updated>2014-12-06T23:46:13+03:00</updated>
   <id>http://go.aopphp.com/</id>
   <author>
     <name><![CDATA[Lisachenko Alexander]]></name>
@@ -16,7 +16,7 @@
   <entry>
     <title type="html"><![CDATA[Caching like a PRO]]></title>
     <link href="http://go.aopphp.com/blog/2014/10/19/caching-like-a-pro/"/>
-    <updated>2014-10-19T21:02:00+04:00</updated>
+    <updated>2014-10-19T20:02:00+03:00</updated>
     <id>http://go.aopphp.com/blog/2014/10/19/caching-like-a-pro</id>
     <content type="html"><![CDATA[<p>As web applications become more large-scaled, the questions of performance optimization are more frequently considered in initial design. One of the optimization techniques used extensively is caching. Cache contains pre-processed data which is ready to be used without redoing the processing. This article shows the possible ways of doing caching in PHP, including aspect-oriented approach.</p>
 
@@ -40,144 +40,122 @@ Let&rsquo;s have a look at caching in the PHP.</p>
 
 <p>Imagine that you have a code in a service class that returns information about something:</p>
 
-<p>```php
-class ImportantService
+<pre><code class="php">class ImportantService
 {
-    /**</p>
-
-<pre><code> * Returns information about object by its unique identifier
- *
- * @return object
- */
-public function getInformation($uniqueIdentifier)
-{
-    return $this-&gt;dataSource-&gt;getOne($uniqueIdentifier);
+    /**
+     * Returns information about object by its unique identifier
+     *
+     * @return object
+     */
+    public function getInformation($uniqueIdentifier)
+    {
+        return $this-&gt;dataSource-&gt;getOne($uniqueIdentifier);
+    }
 }
 </code></pre>
-
-<p>}
-```</p>
 
 <p>This service and method is pretty clear, but your boss has just discovered that it takes several seconds to query this information and asks you to fix this. What would you do in order to improve the performance of this method? Of course, the easiest way to do this is to write this data into cache and then just check if there is a record in our cache instead of making hard query to a busy data source server.</p>
 
 <p>At elementary level we can do this easy with memcache extension:</p>
 
-<p>```php
-class ImportantService
-{</p>
-
-<pre><code>private $cache = null;
-</code></pre>
-
-<p>    /**</p>
-
-<pre><code> * Default constructor
- */
-public function __construct()
+<pre><code class="php">class ImportantService
 {
-    $this-&gt;cache = $memcache = new Memcache();
-    $memcache-&gt;addServer('memcache.local');
-}
-</code></pre>
+    private $cache = null;
 
-<p>    /**</p>
-
-<pre><code> * Returns information about object by its unique identifier
- *
- * @return object
- */
-public function getInformation($uniqueIdentifier)
-{
-    $result = $this-&gt;cache-&gt;get($uniqueIdentifier);
-    if ($result === false) {
-        $result = $this-&gt;dataSource-&gt;getOne($uniqueIdentifier);
-        $this-&gt;cache-&gt;set($uniqueIdentifier, $result);
+    /**
+     * Default constructor
+     */
+    public function __construct()
+    {
+        $this-&gt;cache = $memcache = new Memcache();
+        $memcache-&gt;addServer('memcache.local');
     }
 
-    return $result;
+
+    /**
+     * Returns information about object by its unique identifier
+     *
+     * @return object
+     */
+    public function getInformation($uniqueIdentifier)
+    {
+        $result = $this-&gt;cache-&gt;get($uniqueIdentifier);
+        if ($result === false) {
+            $result = $this-&gt;dataSource-&gt;getOne($uniqueIdentifier);
+            $this-&gt;cache-&gt;set($uniqueIdentifier, $result);
+        }
+
+        return $result;
+    }
 }
 </code></pre>
 
-<p>}
-```
-Now we use cache and store results from original data source for future use. On a subsequent query with unique identifier we can take a result from cache and just return it instead of doing hard query. So this code will work faster and this should make your boss happier. However I should put here a warning for beginners not to write code like this. Be more experienced and write code better!</p>
+<p>Now we use cache and store results from original data source for future use. On a subsequent query with unique identifier we can take a result from cache and just return it instead of doing hard query. So this code will work faster and this should make your boss happier. However I should put here a warning for beginners not to write code like this. Be more experienced and write code better!</p>
 
 <h3>Caching. Pre-Intermediate.</h3>
 
-<p>What&rsquo;s wrong with the previous example with caching? Ok, there are two issues in it. Firstly, we don&rsquo;t use a <a href="http://en.wikipedia.org/wiki/Dependency_injection">Dependency Injection (DI)</a> to inject instance of cache and we hard-coded cache initialization in constructor. Secondly, we put logic of caching into the original service. This implementation violates <a href="http://en.wikipedia.org/wiki/Single_responsibility_principle">Single Responsibility Principle (SRP)</a> and can cause a lot of problems with testing, as we won&rsquo;t be able to query the information directly from a data source without caching. We may as well violate another principle &ndash; <a href="http://en.wikipedia.org/wiki/Don%27t_repeat_yourself">DRY</a>. This may occur if there are several methods in the class that should be cached, and we write extra lines of code in each method:</p>
+<p>What&rsquo;s wrong with the previous example with caching? Ok, there are two issues in it. Firstly, we don&rsquo;t use a <a href="http://en.wikipedia.org/wiki/Dependency_injection">Dependency Injection (DI)</a> to inject instance of cache and we hard-coded cache initialization in constructor. Secondly, we put logic of caching into the original service. This implementation violates <a href="http://en.wikipedia.org/wiki/Single_responsibility_principle">Single Responsibility Principle (SRP)</a> and can cause a lot of problems with testing, as we won&rsquo;t be able to query the information directly from a data source without caching. We may as well violate another principle - <a href="http://en.wikipedia.org/wiki/Don%27t_repeat_yourself">DRY</a>. This may occur if there are several methods in the class that should be cached, and we write extra lines of code in each method:</p>
 
-<p>```php</p>
+<pre><code class="php">
+$result = $this-&gt;cache-&gt;get($uniqueIdentifier);
+if ($result === false) {
+    $result = ...
+    $this-&gt;cache-&gt;set($uniqueIdentifier, $result);
+}
 
-<p>$result = $this->cache->get($uniqueIdentifier);
-if ($result === false) {</p>
-
-<pre><code>$result = ...
-$this-&gt;cache-&gt;set($uniqueIdentifier, $result);
+return $result;
 </code></pre>
-
-<p>}</p>
-
-<p>return $result;
-```</p>
 
 <p>You can notice that we put the same lines of code everywhere where we need to add caching. This is known as cross-cutting concern. Caching is a typical example of it, and traditional object-oriented paradigm offers only few ways to extract this logic into one place. One of them is proxy pattern: define a class with magic <code>__call()</code> method and wrap an object with caching proxy:</p>
 
-<p>```php
-class CachingProxy
-{</p>
-
-<pre><code>private $cache = null;
-private $instance = null;
-
-public function __construct(Memcache $cache, $instance)
+<pre><code class="php">class CachingProxy
 {
-    $this-&gt;cache    = $cache;
-    $this-&gt;instance = $instance;
-}
+    private $cache = null;
+    private $instance = null;
 
-public function __call($method, $arguments)
-{
-    if (substr($method, 0, 3) !== 'get') {
-        $result = call_user_func_array($method, $arguments);
-    } else {
-        $uniqueId = $method . serialize($arguments);
-        $result = $this-&gt;cache-&gt;get($uniqueId);
-        if ($result === false) {
-            $result = call_user_func_array($method, $arguments);
-            $this-&gt;cache-&gt;set($uniqueId, $result);
-        }
+    public function __construct(Memcache $cache, $instance)
+    {
+        $this-&gt;cache    = $cache;
+        $this-&gt;instance = $instance;
     }
 
-    return $result;
+    public function __call($method, $arguments)
+    {
+        if (substr($method, 0, 3) !== 'get') {
+            $result = call_user_func_array($method, $arguments);
+        } else {
+            $uniqueId = $method . serialize($arguments);
+            $result = $this-&gt;cache-&gt;get($uniqueId);
+            if ($result === false) {
+                $result = call_user_func_array($method, $arguments);
+                $this-&gt;cache-&gt;set($uniqueId, $result);
+            }
+        }
+
+        return $result;
+    }
 }
+
+$service = new ImportantService();
+$cachedService = new CachingProxy($memcacheInstance, $service);
+
+$result = $cachedService-&gt;getInformation(123); // First call goes to a data source
+$more   = $cachedService-&gt;getInformation(123); // From cache now
 </code></pre>
-
-<p>}</p>
-
-<p>$service = new ImportantService();
-$cachedService = new CachingProxy($memcacheInstance, $service);</p>
-
-<p>$result = $cachedService->getInformation(123); // First call goes to a data source
-$more   = $cachedService->getInformation(123); // From cache now
-```</p>
 
 <p>Much better now! We extracted the logic of caching into a separate class and can wrap any instance. Our original service still has transparent logic and doesn&rsquo;t need any instance of cache to work. But this solution has another two issues. The first issue is that proxy slows down execution of each method due to magic <code>__call()</code> and slow <code>call_user_func_array()</code> function. The second issue is more serious. Proxy violates inheritance and <a href="http://en.wikipedia.org/wiki/Liskov_substitution_principle">Liskov Substitution Principle (LSP)</a>. This means that we can&rsquo;t pass an instance of proxy everywhere where original class is expected:</p>
 
-<p>```php
-function expectsImportantService(ImportantService $service)
-{</p>
+<pre><code class="php">function expectsImportantService(ImportantService $service) 
+{
+    return $service-&gt;getInformation(123);
+}
 
-<pre><code>return $service-&gt;getInformation(123);
-</code></pre>
+$service = new ImportantService();
+expectsImportantService($service); // OK
 
-<p>}</p>
-
-<p>$service = new ImportantService();
-expectsImportantService($service); // OK</p>
-
-<p>$cachedService = new CachingProxy($memcacheInstance, $service);
+$cachedService = new CachingProxy($memcacheInstance, $service);
 expectsImportantService($cachedService); // Catchable Fatal Error, expecting instance of ImportantService
-```</p>
+</code></pre>
 
 <p>This example shows that caching proxy is not a perfect solution because it is violating typehints and decreasing performance of application. However, it can be used to extract logic of caching into a single class and to keep original classes clean.</p>
 
@@ -185,75 +163,60 @@ expectsImportantService($cachedService); // Catchable Fatal Error, expecting ins
 
 <p>At this level developers understand that caching logic should be separated from original code and LSP should be used. This is possible with decorator pattern, when caching class extends an original service class and overwrites methods to introduce an additional logic. Usually, it is done automatically with reflection and code generation.</p>
 
-<p>```php</p>
-
-<p>class CachedImportantService extends ImportantService
-{</p>
-
-<pre><code>private $cache = null;
-</code></pre>
-
-<p>    /**</p>
-
-<pre><code> * Default constructor
- */
-public function __construct($cache)
+<pre><code class="php">
+class CachedImportantService extends ImportantService
 {
-    $this-&gt;cache = $cache
-    parent::__construct();
-}
-</code></pre>
+    private $cache = null;
 
-<p>    /**</p>
-
-<pre><code> * Returns information about object by its unique identifier
- *
- * @return object
- */
-public function getInformation($uniqueIdentifier)
-{
-    $result = $this-&gt;cache-&gt;get($uniqueIdentifier);
-    if ($result === false) {
-        $result = parent::getInformation($uniqueIdentifier); // call original parent method
-        $this-&gt;cache-&gt;set($uniqueIdentifier, $result);
+    /**
+     * Default constructor
+     */
+    public function __construct($cache)
+    {
+        $this-&gt;cache = $cache
+        parent::__construct();
     }
 
-    return $result;
+    /**
+     * Returns information about object by its unique identifier
+     *
+     * @return object
+     */
+    public function getInformation($uniqueIdentifier)
+    {
+        $result = $this-&gt;cache-&gt;get($uniqueIdentifier);
+        if ($result === false) {
+            $result = parent::getInformation($uniqueIdentifier); // call original parent method
+            $this-&gt;cache-&gt;set($uniqueIdentifier, $result);
+        }
+
+        return $result;
+    }
 }
 </code></pre>
-
-<p>}
-```</p>
 
 <p>This solution requires a lot of code generation and it&rsquo;s still duplicated, because we need to override each method that should be cached with our implementation. It also requires to rewrite the source code or adjust definition of service to use an extended <code>CachedImportantService</code> instead of the original one. But we can use a framework for this, for example, there is a nice one <a href="https://github.com/Ocramius/ProxyManager">Ocramius/ProxyManager</a>.</p>
 
 <p>Nevertheless, decorators and proxies can&rsquo;t be used for static methods. Imagine that we have <code>ImportantService::staticGetInformation()</code> method which is used somewhere in the source code:</p>
 
-<p>```php
-class ImportantService
+<pre><code class="php">class ImportantService
 {
-    /**</p>
+    /**
+     * Returns information about object by its unique identifier
+     *
+     * @return object
+     */
+    public static function getInformation($uniqueIdentifier)
+    {
+        return self::$dataSource-&gt;getOne($uniqueIdentifier);
+    }
+}
 
-<pre><code> * Returns information about object by its unique identifier
- *
- * @return object
- */
-public static function getInformation($uniqueIdentifier)
+function testStaticMethod()
 {
-    return self::$dataSource-&gt;getOne($uniqueIdentifier);
+    return ImportantService::getInformation(123); // no way to cache it or to replace with decorator/proxy
 }
 </code></pre>
-
-<p>}</p>
-
-<p>function testStaticMethod()
-{</p>
-
-<pre><code>return ImportantService::getInformation(123); // no way to cache it or to replace with decorator/proxy
-</code></pre>
-
-<p>}
-```</p>
 
 <p>So, even advanced proxies can&rsquo;t help us extract caching logic for static methods into the proxy/decorator. They won&rsquo;t work for final classes either, because a final class can&rsquo;t be extended.</p>
 
@@ -279,75 +242,67 @@ public static function getInformation($uniqueIdentifier)
 
 <p>My preferred way to declare method as &ldquo;cacheable&rdquo; is to use an annotation.</p>
 
-<p>```php
-use Annotation\Cacheable;</p>
+<pre><code class="php">use Annotation\Cacheable;
 
-<p>class ImportantService
+class ImportantService
 {
-    /**</p>
-
-<pre><code> * Returns information about object by its unique identifier
- * @Cacheable
- *
- * @return object
- */
-public function getInformation($uniqueIdentifier)
-{
-    return $this-&gt;dataSource-&gt;getOne($uniqueIdentifier);
+    /**
+     * Returns information about object by its unique identifier
+     * @Cacheable
+     *
+     * @return object
+     */
+    public function getInformation($uniqueIdentifier)
+    {
+        return $this-&gt;dataSource-&gt;getOne($uniqueIdentifier);
+    }
 }
 </code></pre>
-
-<p>}
-```</p>
 
 <p>Then we just need to define an aspect for caching, that will intercept all methods with <code>Cacheable</code> annotation:</p>
 
-<p>```php
-use Go\Aop\Aspect;
+<pre><code class="php">use Go\Aop\Aspect;
 use Go\Aop\Intercept\MethodInvocation;
-use Go\Lang\Annotation\Around;</p>
-
-<p>/<em>*
- * Caching aspect
- </em>/
-class CachingAspect implements Aspect
-{</p>
-
-<pre><code>private $cache = null;
-
-public function __construct(Memcache $cache)
-{
-    $this-&gt;cache = $cache;
-}
+use Go\Lang\Annotation\Around;
 
 /**
- * This advice intercepts the execution of cacheable methods
- *
- * The logic is pretty simple: we look for the value in the cache and if we have a cache miss
- * we then invoke original method and store its result in the cache.
- *
- * @param MethodInvocation $invocation Invocation
- *
- * @Around("@annotation(Annotation\Cacheable)")
+ * Caching aspect
  */
-public function aroundCacheable(MethodInvocation $invocation)
+class CachingAspect implements Aspect
 {
-    $obj   = $invocation-&gt;getThis();
-    $class = is_object($obj) ? get_class($obj) : $obj;
-    $key   = $class . ':' . $invocation-&gt;getMethod()-&gt;name;
+    private $cache = null;
 
-    $result = $this-&gt;cache-&gt;get($key);
-    if ($result === false) {
-        $result = $invocation-&gt;proceed();
-        $this-&gt;cache-&gt;set($key, $result);
+    public function __construct(Memcache $cache)
+    {
+        $this-&gt;cache = $cache;
     }
 
-    return $result;
+    /**
+     * This advice intercepts the execution of cacheable methods
+     *
+     * The logic is pretty simple: we look for the value in the cache and if we have a cache miss
+     * we then invoke original method and store its result in the cache.
+     *
+     * @param MethodInvocation $invocation Invocation
+     *
+     * @Around("@annotation(Annotation\Cacheable)")
+     */
+    public function aroundCacheable(MethodInvocation $invocation)
+    {
+        $obj   = $invocation-&gt;getThis();
+        $class = is_object($obj) ? get_class($obj) : $obj;
+        $key   = $class . ':' . $invocation-&gt;getMethod()-&gt;name;
+
+        $result = $this-&gt;cache-&gt;get($key);
+        if ($result === false) {
+            $result = $invocation-&gt;proceed();
+            $this-&gt;cache-&gt;set($key, $result);
+        }
+
+        return $result;
+    }
 }
 </code></pre>
-
-<p>}
-```</p>
 
 <p>This aspect then will be registered in the AOP kernel. AOP engine will analyze each loaded class during autoloading and if a method matches the <code>@Around("@annotation(Annotation\Cacheable)")</code> pointcut then AOP will change it on the fly to include a custom logic of invoking an advice. Class name will be preserved, so AOP can easily cache static methods and even methods in final classes.</p>
 
@@ -366,7 +321,7 @@ public function aroundCacheable(MethodInvocation $invocation)
   <entry>
     <title type="html"><![CDATA[What is new in version 0.5.0]]></title>
     <link href="http://go.aopphp.com/blog/2014/05/24/what-is-new-in-version-0-dot-5-dot-0/"/>
-    <updated>2014-05-24T21:26:00+04:00</updated>
+    <updated>2014-05-24T21:26:00+03:00</updated>
     <id>http://go.aopphp.com/blog/2014/05/24/what-is-new-in-version-0-dot-5-dot-0</id>
     <content type="html"><![CDATA[<p>New versions of frameworks are always exciting because they provide more features and can contain important fixes and changes. Go! AOP evolves too, so I prepared this article for users to underline most important changes.</p>
 
@@ -387,38 +342,32 @@ public function aroundCacheable(MethodInvocation $invocation)
 
 <p>I received a lot of complains about usage of annotations for defining advices instead of pure PHP code. So I decided to give an alternative way for defining advisors with closures:</p>
 
-<p>```php</p>
-
-<pre><code>protected function configureAop(AspectContainer $container)
-{
-    $container-&gt;registerAdvisor(
-        new DefaultPointcutAdvisor(
-            new TrueMethodPointcut(),
-            new MethodBeforeInterceptor(function (MethodInvocation $invocation) {
-                echo "Hello", $invocation-&gt;getMethod()-&gt;name;
-            })
-        ),
-        'test'
-    );
-}
+<pre><code class="php">    protected function configureAop(AspectContainer $container)
+    {
+        $container-&gt;registerAdvisor(
+            new DefaultPointcutAdvisor(
+                new TrueMethodPointcut(),
+                new MethodBeforeInterceptor(function (MethodInvocation $invocation) {
+                    echo "Hello", $invocation-&gt;getMethod()-&gt;name;
+                })
+            ),
+            'test'
+        );
+    }
 </code></pre>
 
-<p><code>``
-This patch also optimizes injection of advices (interceptors) into the concrete class, so no more slow</code>serialize()/unserialize()<code>functions, they were replaced by</code>var_export()` and direct injection. I&rsquo;m also thinking about DSL builders for defining pointcuts in a more natural way:</p>
+<p>This patch also optimizes injection of advices (interceptors) into the concrete class, so no more slow <code>serialize()/unserialize()</code> functions, they were replaced by <code>var_export()</code> and direct injection. I&rsquo;m also thinking about DSL builders for defining pointcuts in a more natural way:</p>
 
-<p>```php</p>
-
-<pre><code>protected function configureAop(AspectContainer $container)
-{
-    $builder = new PointcutBuilder($container);
-    $builder-&gt;before('execution(public **-&gt;get(*)')-&gt;do(function (MethodInvocation $invocation) {
-        echo "Hello", $invocation-&gt;getMethod()-&gt;name;
-    });
-}
+<pre><code class="php">    protected function configureAop(AspectContainer $container)
+    {
+        $builder = new PointcutBuilder($container);
+        $builder-&gt;before('execution(public **-&gt;get(*)')-&gt;do(function (MethodInvocation $invocation) {
+            echo "Hello", $invocation-&gt;getMethod()-&gt;name;
+        });
+    }
 </code></pre>
 
-<p>```
-But this is not included into the current version, please ping me on github if your want it for the next version.</p>
+<p>But this is not included into the current version, please ping me on github if your want it for the next version.</p>
 
 <h3>Annotation class filter</h3>
 
@@ -428,21 +377,18 @@ But this is not included into the current version, please ping me on github if y
 
 <p>Here is an example of pointcut that intercepts execution of all public methods in the class marked with <code>Invariant</code> annotation:</p>
 
-<p>```php</p>
-
-<pre><code>/**
- * Verifies invariants for contract class
- *
- * @Around("@within(PhpDeal\Annotation\Invariant) &amp;&amp; execution(public **-&gt;*(*))")
- * @param MethodInvocation $invocation
- *
- * @throws ContractViolation
- * @return mixed
- */
-public function invariantContract(MethodInvocation $invocation) {...}
+<pre><code class="php">
+    /**
+     * Verifies invariants for contract class
+     *
+     * @Around("@within(PhpDeal\Annotation\Invariant) &amp;&amp; execution(public **-&gt;*(*))")
+     * @param MethodInvocation $invocation
+     *
+     * @throws ContractViolation
+     * @return mixed
+     */
+    public function invariantContract(MethodInvocation $invocation) {...}
 </code></pre>
-
-<p>```</p>
 
 <h3>Access to a doctrine annotations from the MethodInvocation class</h3>
 
@@ -450,59 +396,51 @@ public function invariantContract(MethodInvocation $invocation) {...}
 
 <p>Some aspects can analyze annotation to perform additional steps. Consider the following class where we define a ttl in the annotation for a method:</p>
 
-<p>```php
-use Demo\Annotation\Cacheable;</p>
+<pre><code class="php">use Demo\Annotation\Cacheable;
 
-<p>class General
-{</p>
-
-<pre><code>/**
- * Test cacheable by annotation
- *
- * @Cacheable(time=10)
- * @param float $timeToSleep Amount of time to sleep
- *
- * @return string
- */
-public function cacheMe($timeToSleep)
+class General
 {
-    usleep($timeToSleep * 1e6);
-    return 'Yeah';
+    /**
+     * Test cacheable by annotation
+     *
+     * @Cacheable(time=10)
+     * @param float $timeToSleep Amount of time to sleep
+     *
+     * @return string
+     */
+    public function cacheMe($timeToSleep)
+    {
+        usleep($timeToSleep * 1e6);
+        return 'Yeah';
+    }
 }
 </code></pre>
-
-<p>}
-```</p>
 
 <p>We can easily define a pointcut and advice that will intercept the execution of methods marked with <code>Cacheable</code> annotation and cache their results in the cache for a specified time. Should be cool, isn&rsquo;t it? Let&rsquo;s do this:</p>
 
-<p>```php
-use Demo\Annotation\Cacheable;
+<pre><code class="php">use Demo\Annotation\Cacheable;
 use Go\Aop\Aspect;
 use Go\Aop\Intercept\MethodInvocation;
-use Go\Lang\Annotation\Around;</p>
+use Go\Lang\Annotation\Around;
 
-<p>class CacheAspect implements Aspect
-{</p>
-
-<pre><code>/**
- * Cacheable methods
- *
- * @param MethodInvocation $invocation Invocation
- *
- * @Around("@annotation(Demo\Annotation\Cacheable)")
- */
-public function aroundCacheable(MethodInvocation $invocation)
+class CacheAspect implements Aspect
 {
-    /** @var Cacheable $cacheable */
-    $cacheable = $invocation-&gt;getMethod()-&gt;getAnnotation(Cacheable::class);
-    echo $cacheable-&gt;time; // TTL for the cache
-    return $invocation-&gt;proceed();
+    /**
+     * Cacheable methods
+     *
+     * @param MethodInvocation $invocation Invocation
+     *
+     * @Around("@annotation(Demo\Annotation\Cacheable)")
+     */
+    public function aroundCacheable(MethodInvocation $invocation)
+    {
+        /** @var Cacheable $cacheable */
+        $cacheable = $invocation-&gt;getMethod()-&gt;getAnnotation(Cacheable::class);
+        echo $cacheable-&gt;time; // TTL for the cache
+        return $invocation-&gt;proceed();
+    }
 }
 </code></pre>
-
-<p>}
-```</p>
 
 <h3>Simplified pointcut syntax for methods in the same class</h3>
 
@@ -516,7 +454,7 @@ execution(public **\*Controller-&gt;create(*) )
 || execution(public **\*Controller-&gt;delete(*) )
 </code></p>
 
-<p>it is possible to use or'ed constructions with <code>|</code> sign:
+<p>it is possible to use or&#8217;ed constructions with <code>|</code> sign:
 <code>
 execution(public **\*Controller-&gt;create|get|update|delete(*))
 </code>
@@ -528,27 +466,23 @@ Much cleaner and more readable!</p>
 
 <p>It is not a secret, that framework performs load-time weaving of aspects during loading the source file into PHP. Before PHP will be able to parse it and load, Go! AOP scans tokens and builds reflection to analyze a pointcuts. At that moment of class loading there is no information about full inheritance of class (interfaces, abstract classes, traits). This was known limitation of framework that it wasn&rsquo;t possible to match parent methods in the children class:</p>
 
-<p>```php
-class Greeting
-{</p>
-
-<pre><code>public hello($name)
+<pre><code class="php">class Greeting
 {
-    echo "hello $name";
+    public hello($name)
+    {
+        echo "hello $name";
+    }
 }
-</code></pre>
 
-<p>}</p>
-
-<p>class Example extends Greeting
+class Example extends Greeting
 {
-}</p>
+}
 
-<p>// pointcut is @Before(&ldquo;execution(public Example-><em>(</em>))&rdquo;)</p>
+// pointcut is @Before("execution(public Example-&gt;*(*))")
 
-<p>$e = new Example();
-$e->hello(&ldquo;User&rdquo;); // advice is not applied, because method is defined in the Greeting class
-```</p>
+$e = new Example();
+$e-&gt;hello("User"); // advice is not applied, because method is defined in the Greeting class
+</code></pre>
 
 <p>After some research I found a way to recursively load parent classes and scan tokens. This is the major change for a dessert, but it can have an impact on the current aspects that uses <code>within</code> or similar pointcuts.</p>
 ]]></content>
@@ -557,7 +491,7 @@ $e->hello(&ldquo;User&rdquo;); // advice is not applied, because method is defin
   <entry>
     <title type="html"><![CDATA[Aspect-Oriented programming with Yii]]></title>
     <link href="http://go.aopphp.com/blog/2013/09/28/aspect-oriented-programming-with-yii/"/>
-    <updated>2013-09-28T16:28:00+04:00</updated>
+    <updated>2013-09-28T16:28:00+03:00</updated>
     <id>http://go.aopphp.com/blog/2013/09/28/aspect-oriented-programming-with-yii</id>
     <content type="html"><![CDATA[<p>Aspect-Oriented programming becomes more popular for PHP, but it requires good knowledge of OOP and can be very cumbersome for beginners. So it&rsquo;s important to have a working examples and manuals to have a possibility to run it locally with favorite framework. Go! AOP provides all the necessary functionality for configuration of AOP into any frameworks, but integration process can be very tricky, so configuration is not so easy. In this article we will configure a working example for Yii framework.</p>
 
@@ -566,9 +500,8 @@ $e->hello(&ldquo;User&rdquo;); // advice is not applied, because method is defin
 
 <p>Let&rsquo;s start! First of all, we need an empty <code>yii-aspect</code> directory for our project:</p>
 
-<p><code>bash
-mkdir yii-aspect &amp;&amp; cd yii-aspect
-</code></p>
+<pre><code class="bash">mkdir yii-aspect &amp;&amp; cd yii-aspect
+</code></pre>
 
 <p>Next step is to install dependencies: Yii and Go! AOP frameworks. Go! AOP is registered on packagist and can be easily installed with composer:
 <code>bash
@@ -588,151 +521,146 @@ yiic webapp app
 Yii will generate a directory <code>app</code> with default project structure and files. This project can be opened in the browser, but AOP isn&rsquo;t enabled right now. To enable AOP we should prepare our application to have an ability to use it. To enable AOP we need to update the front controller of our application (<code>./app/index.php</code>) in the following way:</p>
 
 <p>Add this lines to the top of file before original content:
-```php
-&lt;?php
-use Go\Instrument\Transformer\FilterInjectorTransformer;</p>
-
-<p>// Load the composer autoloader
-include <strong>DIR</strong> . &lsquo;/../vendor/autoload.php&rsquo;;</p>
-
-<p>// Load AOP kernel
-include <strong>DIR</strong> . &lsquo;/aspect.php&rsquo;;
-```</p>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span><span class="o">?</span><span class="nx">php</span>
+</span><span class='line'><span class="k">use</span> <span class="nx">Go\Instrument\Transformer\FilterInjectorTransformer</span><span class="p">;</span><span class="o">&lt;/</span><span class="nx">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;//</span> <span class="nx">Load</span> <span class="nx">the</span> <span class="nx">composer</span> <span class="nx">autoloader</span>
+</span><span class='line'><span class="k">include</span> <span class="o">&lt;</span><span class="nx">strong</span><span class="o">&gt;</span><span class="nx">DIR</span><span class="o">&lt;/</span><span class="nx">strong</span><span class="o">&gt;</span> <span class="o">.</span> <span class="o">&amp;</span><span class="nx">lsquo</span><span class="p">;</span><span class="o">/../</span><span class="nx">vendor</span><span class="o">/</span><span class="nx">autoload</span><span class="o">.</span><span class="nx">php</span><span class="o">&amp;</span><span class="nx">rsquo</span><span class="p">;;</span><span class="o">&lt;/</span><span class="nx">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;//</span> <span class="nx">Load</span> <span class="nx">AOP</span> <span class="nx">kernel</span>
+</span><span class='line'><span class="k">include</span> <span class="o">&lt;</span><span class="nx">strong</span><span class="o">&gt;</span><span class="nx">DIR</span><span class="o">&lt;/</span><span class="nx">strong</span><span class="o">&gt;</span> <span class="o">.</span> <span class="o">&amp;</span><span class="nx">lsquo</span><span class="p">;</span><span class="o">/</span><span class="nx">aspect</span><span class="o">.</span><span class="nx">php</span><span class="o">&amp;</span><span class="nx">rsquo</span><span class="p">;;</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <p>And replace initialization of Yii at the bottom of file from <code>require_once($yii)</code> to <code>require_once(FilterInjectorTransformer::rewrite($yii))</code>. This is needed to give a hook for the Go! AOP framework to weave aspects into classes. Aspects are defined as separated classes and included in the <code>./aspect.php</code> file. Let&rsquo;s move to it and to the aspect kernel</p>
 
-<p>```php</p>
+<pre><code class="php">
+include __DIR__ . '/protected/extensions/go-aop-php/ApplicationAspectKernel.php';
 
-<p>include <strong>DIR</strong> . &lsquo;/protected/extensions/go-aop-php/ApplicationAspectKernel.php&rsquo;;</p>
+// Prevent an error about nesting level
+ini_set('xdebug.max_nesting_level', 500);
 
-<p>// Prevent an error about nesting level
-ini_set(&lsquo;xdebug.max_nesting_level&rsquo;, 500);</p>
-
-<p>// Initialize an application aspect container
+// Initialize an application aspect container
 $applicationAspectKernel = ApplicationAspectKernel::getInstance();
-$applicationAspectKernel->init(array(</p>
-
-<pre><code>'debug' =&gt; true,
-// Application root directory
-'appDir'   =&gt; __DIR__ . '/../',
-// Cache directory
-'cacheDir' =&gt; __DIR__ . './protected/aspect',
-'excludePaths' =&gt; array(
-    __DIR__ . './protected/aspect'
-)
+$applicationAspectKernel-&gt;init(array(
+    'debug' =&gt; true,
+    // Application root directory
+    'appDir'   =&gt; __DIR__ . '/../',
+    // Cache directory
+    'cacheDir' =&gt; __DIR__ . './protected/aspect',
+    'excludePaths' =&gt; array(
+        __DIR__ . './protected/aspect'
+    )
+));
 </code></pre>
-
-<p>));
-```</p>
 
 <p>This is typical configuration of Go! AOP framework where we can adjust some directories and paths. I think that this config is pretty clear to understand. Only <code>debug</code> parameter is really important. For production mode it should be <code>false</code>, but for development mode it should be enabled to enable better debugging and cache refreshing.</p>
 
 <p>In this file we also include a strange file <code>ApplicationAspectKernel.php</code>. This file contains definition of aspect kernel for our application and it&rsquo;s very simple:</p>
 
-<p>```php</p>
+<pre><code class="php">
+use Go\Core\AspectKernel;
+use Go\Core\AspectContainer;
 
-<p>use Go\Core\AspectKernel;
-use Go\Core\AspectContainer;</p>
-
-<p>/<em>*
+/**
  * Application Aspect Kernel
- </em>/
-class ApplicationAspectKernel extends AspectKernel
-{</p>
-
-<pre><code>/**
- * Configure an AspectContainer with advisors, aspects and pointcuts
- *
- * @param AspectContainer $container
- *
- * @return void
  */
-protected function configureAop(AspectContainer $container)
+class ApplicationAspectKernel extends AspectKernel
 {
-    // todo: register aspects, advisors, pointcuts, etc
+
+    /**
+     * Configure an AspectContainer with advisors, aspects and pointcuts
+     *
+     * @param AspectContainer $container
+     *
+     * @return void
+     */
+    protected function configureAop(AspectContainer $container)
+    {
+        // todo: register aspects, advisors, pointcuts, etc
+    }
 }
 </code></pre>
 
-<p>}
-```</p>
-
 <p>There is only one method to define: <code>configureAop</code> that is used for AOP configuration. We can create an aspect now and register it in the kernel:</p>
 
-<p>```php
-&lt;?php
-// app/protected/extensions/go-aop-php/TestMonitorAspect.php</p>
+<pre><code class="php">&lt;?php
+// app/protected/extensions/go-aop-php/TestMonitorAspect.php
 
-<p>namespace Aspect;</p>
+namespace Aspect;
 
-<p>use Go\Aop\Aspect;
+use Go\Aop\Aspect;
 use Go\Aop\Intercept\FieldAccess;
 use Go\Aop\Intercept\MethodInvocation;
 use Go\Lang\Annotation\After;
 use Go\Lang\Annotation\Before;
 use Go\Lang\Annotation\Around;
-use Go\Lang\Annotation\Pointcut;</p>
+use Go\Lang\Annotation\Pointcut;
 
-<p>/<em>*
+/**
  * Monitor aspect
- </em>/
+ */
 class TestMonitorAspect implements Aspect
-{</p>
-
-<pre><code>/**
- * Method that will be called before real method
- *
- * @param MethodInvocation $invocation Invocation
- * @Before("within(**)")
- */
-public function beforeMethodExecution(MethodInvocation $invocation)
 {
-    $obj = $invocation-&gt;getThis();
-    echo 'Calling Before Interceptor for method: ',
-    is_object($obj) ? get_class($obj) : $obj,
-    $invocation-&gt;getMethod()-&gt;isStatic() ? '::' : '-&gt;',
-    $invocation-&gt;getMethod()-&gt;getName(),
-    '()',
-    ' with arguments: ',
-    json_encode($invocation-&gt;getArguments()),
-    "&lt;br&gt;\n";
+
+    /**
+     * Method that will be called before real method
+     *
+     * @param MethodInvocation $invocation Invocation
+     * @Before("within(**)")
+     */
+    public function beforeMethodExecution(MethodInvocation $invocation)
+    {
+        $obj = $invocation-&gt;getThis();
+        echo 'Calling Before Interceptor for method: ',
+        is_object($obj) ? get_class($obj) : $obj,
+        $invocation-&gt;getMethod()-&gt;isStatic() ? '::' : '-&gt;',
+        $invocation-&gt;getMethod()-&gt;getName(),
+        '()',
+        ' with arguments: ',
+        json_encode($invocation-&gt;getArguments()),
+        "&lt;br&gt;\n";
+    }
 }
 </code></pre>
 
-<p>}
-```
-&hellip; and registration in the kernel:</p>
+<p>&hellip; and registration in the kernel:</p>
 
-<p>```php
-&lt;?php
-// app/protected/extensions/go-aop-php/ApplicationAspectKernel.php</p>
+<pre><code class="php">&lt;?php
+// app/protected/extensions/go-aop-php/ApplicationAspectKernel.php
 
-<p>require_once &lsquo;TestMonitorAspect.php&rsquo;;</p>
+require_once 'TestMonitorAspect.php';
 
-<p>use Aspect\TestMonitorAspect;
+use Aspect\TestMonitorAspect;
 use Go\Core\AspectKernel;
-use Go\Core\AspectContainer;</p>
+use Go\Core\AspectContainer;
 
-<p>/<em>*
+/**
  * Application Aspect Kernel
- </em>/
-class ApplicationAspectKernel extends AspectKernel
-{</p>
-
-<pre><code>/**
- * Configure an AspectContainer with advisors, aspects and pointcuts
- *
- * @param AspectContainer $container
- *
- * @return void
  */
-protected function configureAop(AspectContainer $container)
+class ApplicationAspectKernel extends AspectKernel
 {
-    $container-&gt;registerAspect(new TestMonitorAspect());
+
+    /**
+     * Configure an AspectContainer with advisors, aspects and pointcuts
+     *
+     * @param AspectContainer $container
+     *
+     * @return void
+     */
+    protected function configureAop(AspectContainer $container)
+    {
+        $container-&gt;registerAspect(new TestMonitorAspect());
+    }
 }
 </code></pre>
-
-<p>}
-```</p>
 
 <p>That&rsquo;s all )</p>
 
@@ -745,16 +673,15 @@ protected function configureAop(AspectContainer $container)
 
 <p>PS. If you want to create an empty project with single line you can run:</p>
 
-<p><code>bash
-composer create-project lisachenko/yii-aspect --prefer-source --stability=dev
-</code></p>
+<pre><code class="bash">composer create-project lisachenko/yii-aspect --prefer-source --stability=dev
+</code></pre>
 ]]></content>
   </entry>
   
   <entry>
     <title type="html"><![CDATA[Intercepting execution of system functions in PHP]]></title>
     <link href="http://go.aopphp.com/blog/2013/08/24/intercepting-execution-of-system-functions-in-php/"/>
-    <updated>2013-08-24T17:00:00+04:00</updated>
+    <updated>2013-08-24T17:00:00+03:00</updated>
     <id>http://go.aopphp.com/blog/2013/08/24/intercepting-execution-of-system-functions-in-php</id>
     <content type="html"><![CDATA[<p>Intercepting an execution of methods is one of the most common tasks for AOP. In the Java world there are a lot of articles that has a detailed examples for transactional control, logging, authorization, etc. But all AOP stuff in Java is related only to the classes and objects, because functions are not first-class citizens in Java whereas PHP has a good support for functions. By using some tricks we can create a proxies for system functions and add our own interceptors with custom logic. This article will show you how to use AOP techniques with functions in PHP.</p>
 
@@ -763,53 +690,46 @@ composer create-project lisachenko/yii-aspect --prefer-source --stability=dev
 
 <p>Ok, let&rsquo;s have some experiments with PHP. Suppose, that we have a nice code that uses the <code>file_get_contents()</code> function to load the content of a file and then prints it to the screen:</p>
 
-<p>```php
-namespace Test;</p>
+<pre><code class="php">namespace Test;
 
-<p>class FilePrinter
-{</p>
-
-<pre><code>public function show($filename)
+class FilePrinter
 {
-    echo '&lt;pre&gt;', htmlspecialchars(file_get_contents($filename)), '&lt;/pre&gt;';
+    public function show($filename)
+    {
+        echo '&lt;pre&gt;', htmlspecialchars(file_get_contents($filename)), '&lt;/pre&gt;';
+    }
 }
 </code></pre>
-
-<p>}
-```</p>
 
 <p>Is it possible to test this class and method? Of course, yes! We can create a unit test that will generate a temporary file and then just check that content is correct:</p>
 
-<p>```php
-namespace Test;</p>
+<pre><code class="php">namespace Test;
 
-<p>use PHPUnit_Framework_TestCase as TestCase;</p>
+use PHPUnit_Framework_TestCase as TestCase;
 
-<p>class FilePrinterTest extends TestCase
-{</p>
-
-<pre><code>protected $printer;
-
-public function setUp()
+class FilePrinterTest extends TestCase
 {
-    $this-&gt;printer = new FilePrinter();
-}
+    protected $printer;
 
-public function testShow()
-{
-    $file = tempnam("/tmp", "PHP");
-    file_put_contents($file, 'test');
-    ob_start();
-    $this-&gt;printer-&gt;show($file);
-    $content = ob_end_clean();
-    $this-&gt;assertEqual('test', $content);
-    unlink($file);
+    public function setUp()
+    {
+        $this-&gt;printer = new FilePrinter();
+    }
+
+    public function testShow()
+    {
+        $file = tempnam("/tmp", "PHP");
+        file_put_contents($file, 'test');
+        ob_start();
+        $this-&gt;printer-&gt;show($file);
+        $content = ob_end_clean();
+        $this-&gt;assertEqual('test', $content);
+        unlink($file);
+    }
 }
 </code></pre>
 
-<p>}
-<code>``
-Not so cool to use a real filesystem. Real programmers should use [virtual file system](https://github.com/mikey179/vfsStream/wiki)! But is it possible to intercept system functions like</code>file_get_contents()` in PHP?</p>
+<p>Not so cool to use a real filesystem. Real programmers should use <a href="https://github.com/mikey179/vfsStream/wiki">virtual file system</a>! But is it possible to intercept system functions like <code>file_get_contents()</code> in PHP?</p>
 
 <p>I can suppose that most of programmers will argue that it&rsquo;s impossible to intercept system function without extensions such as <a href="https://github.com/mikey179/vfsStream/wiki">runkit</a>. Yes, it&rsquo;s absolutely true that we can not change the function that already loaded into the memory of PHP. However there is a small loophole in the PHP that can be exploited for free.</p>
 
@@ -821,58 +741,47 @@ Not so cool to use a real filesystem. Real programmers should use [virtual file 
 
 <p>Wow! Inside namespace calls to unqualified functions are resolved at run-time! This means that we can create a function with the same name as system function in a namespace and it will be used instead of system one. Let&rsquo;s check this fact:</p>
 
-<p>```php
-namespace Test;</p>
+<pre><code class="php">namespace Test;
 
-<p>use PHPUnit_Framework_TestCase as TestCase;</p>
+use PHPUnit_Framework_TestCase as TestCase;
 
-<p>function file_get_contents($filename) {</p>
-
-<pre><code>return 'Wow!';
-</code></pre>
-
-<p>}</p>
-
-<p>class FilePrinterTest extends TestCase
-{</p>
-
-<pre><code>protected $printer;
-
-public function setUp()
-{
-    $this-&gt;printer = new FilePrinter();
+function file_get_contents($filename) {
+    return 'Wow!';
 }
 
-public function testShow()
+class FilePrinterTest extends TestCase
 {
-    $file = tempnam("/tmp", "PHP");
-    file_put_contents($file, 'test');
-    ob_start();
-    $this-&gt;printer-&gt;show($file);
-    $content = ob_end_clean();
-    $this-&gt;assertEqual('test', $content);
-    unlink($file);
+    protected $printer;
+
+    public function setUp()
+    {
+        $this-&gt;printer = new FilePrinter();
+    }
+
+    public function testShow()
+    {
+        $file = tempnam("/tmp", "PHP");
+        file_put_contents($file, 'test');
+        ob_start();
+        $this-&gt;printer-&gt;show($file);
+        $content = ob_end_clean();
+        $this-&gt;assertEqual('test', $content);
+        unlink($file);
+    }
 }
 </code></pre>
-
-<p>}
-```</p>
 
 <p>Pay an attention that we define the function <code>file_get_contents()</code> in the namespace <code>Test</code>. If we run our test we will see that it is broken, because we expecting &lsquo;test&rsquo; but got &lsquo;Wow!&rsquo;. Very promising ) Small demo is also available at <a href="http://3v4l.org/K1b9k">http://3v4l.org/K1b9k</a></p>
 
 <p>Moreover, if we need to call an original function we can easily do this by using qualified name:</p>
 
-<p>```php
-namespace Test;</p>
+<pre><code class="php">namespace Test;
 
-<p>function file_get_contents($filename) {</p>
-
-<pre><code>echo 'Wow!';
-return \file_get_contents($filename);
+function file_get_contents($filename) {
+    echo 'Wow!';
+    return \file_get_contents($filename);
+}
 </code></pre>
-
-<p>}
-```</p>
 
 <h3>Aspect-oriented programming with functions</h3>
 
@@ -883,41 +792,73 @@ return \file_get_contents($filename);
 <ul>
 <li>Enable function interception in the kernel by setting &lsquo;interceptFunctions&rsquo; => true for the kernel.</li>
 <li>Create an advice within aspect to intercept functions:
-```php
-use Go\Aop\Aspect;
-use Go\Aop\Intercept\FunctionInvocation;
-use Go\Lang\Annotation\Around;</li>
-</ul>
-
-
-<p>/<em>*
- * Function interceptor aspect
- </em>/
-class FunctionInterceptorAspect implements Aspect
-{</p>
-
-<pre><code>/**
- * @param FunctionInvocation $invocation
- *
- * @Around("execution(Test\*(*))")
- *
- * @return mixed
- */
-public function aroundFunction(FunctionInvocation $invocation)
-{
-    echo 'Calling Around Interceptor for function: ',
-        $invocation-&gt;getFunction()-&gt;getName(),
-        '()',
-        ' with arguments: ',
-        json_encode($invocation-&gt;getArguments()),
-        PHP_EOL;
-
-    return $invocation-&gt;proceed();
-}
-</code></pre>
-
-<p>}
-```
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="k">use</span> <span class="nx">Go\Aop\Aspect</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="nx">Go\Aop\Intercept\FunctionInvocation</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="nx">Go\Lang\Annotation\Around</span><span class="p">;</span><span class="o">&lt;/</span><span class="nx">li</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="nx">ul</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;/&lt;</span><span class="nx">em</span><span class="o">&gt;*</span>
+</span><span class='line'> <span class="o">*</span> <span class="k">Function</span> <span class="nf">interceptor</span> <span class="nx">aspect</span>
+</span><span class='line'> <span class="o">&lt;/</span><span class="nx">em</span><span class="o">&gt;/</span>
+</span><span class='line'><span class="k">class</span> <span class="nc">FunctionInterceptorAspect</span> <span class="k">implements</span> <span class="nx">Aspect</span>
+</span><span class='line'><span class="p">{</span><span class="o">&lt;/</span><span class="nx">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="nx">pre</span><span class="o">&gt;&lt;</span><span class="nx">code</span><span class="o">&gt;/**</span>
+</span><span class='line'> <span class="o">*</span> <span class="o">@</span><span class="nx">param</span> <span class="nx">FunctionInvocation</span> <span class="nv">$invocation</span>
+</span><span class='line'> <span class="o">*</span>
+</span><span class='line'> <span class="o">*</span> <span class="o">@</span><span class="nx">Around</span><span class="p">(</span><span class="s2">&quot;execution(Test\*(*))&quot;</span><span class="p">)</span>
+</span><span class='line'> <span class="o">*</span>
+</span><span class='line'> <span class="o">*</span> <span class="o">@</span><span class="k">return</span> <span class="nx">mixed</span>
+</span><span class='line'> <span class="o">*/</span>
+</span><span class='line'><span class="k">public</span> <span class="k">function</span> <span class="nf">aroundFunction</span><span class="p">(</span><span class="nx">FunctionInvocation</span> <span class="nv">$invocation</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">echo</span> <span class="s1">&#39;Calling Around Interceptor for function: &#39;</span><span class="p">,</span>
+</span><span class='line'>        <span class="nv">$invocation</span><span class="o">-&amp;</span><span class="nx">gt</span><span class="p">;</span><span class="nx">getFunction</span><span class="p">()</span><span class="o">-&amp;</span><span class="nx">gt</span><span class="p">;</span><span class="nx">getName</span><span class="p">(),</span>
+</span><span class='line'>        <span class="s1">&#39;()&#39;</span><span class="p">,</span>
+</span><span class='line'>        <span class="s1">&#39; with arguments: &#39;</span><span class="p">,</span>
+</span><span class='line'>        <span class="nb">json_encode</span><span class="p">(</span><span class="nv">$invocation</span><span class="o">-&amp;</span><span class="nx">gt</span><span class="p">;</span><span class="nx">getArguments</span><span class="p">()),</span>
+</span><span class='line'>        <span class="nx">PHP_EOL</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="nv">$invocation</span><span class="o">-&amp;</span><span class="nx">gt</span><span class="p">;</span><span class="nx">proceed</span><span class="p">();</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="nx">code</span><span class="o">&gt;&lt;/</span><span class="nx">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
 * Register this aspect in the kernel</p>
 
 <p>Here we define an advice with an around pointcut <code>execution(Test\*(*))</code>. Pointcut can be translated as &ldquo;around execution of any (*) system functions inside the <code>Test</code> namespace&rdquo;. Body of this method is an advice that will be invoked around the original function. So we have a full control over the return value and original invocation by calling <code>$invocation-&gt;proceed()</code> at the end.
@@ -927,9 +868,8 @@ Look at the screenshot from ZF2 framework:</p>
 
 <p>If you want to try this by hand, feel free to install the Go! AOP framework with composer and open the <code>demos/</code> folder in the browser:</p>
 
-<p><code>
-composer require lisachenko/go-aop-php:0.4.0
-</code></p>
+<pre><code>composer require lisachenko/go-aop-php:0.4.0
+</code></pre>
 
 <p>Thank you for attention!</p>
 ]]></content>
@@ -938,7 +878,7 @@ composer require lisachenko/go-aop-php:0.4.0
   <entry>
     <title type="html"><![CDATA[Implementing logging aspect with Doctrine annotations]]></title>
     <link href="http://go.aopphp.com/blog/2013/07/21/implementing-logging-aspect-with-doctrine-annotations/"/>
-    <updated>2013-07-21T22:38:00+04:00</updated>
+    <updated>2013-07-21T22:38:00+03:00</updated>
     <id>http://go.aopphp.com/blog/2013/07/21/implementing-logging-aspect-with-doctrine-annotations</id>
     <content type="html"><![CDATA[<p>Logging is probably the most mentioned sweet example of AOP. Probably because it is the simplest and most straightforward example most people can think of. So I want to show you the easiest ever way to implement logging in PHP with annotations. This article is the second part of my previous article about <a href="/blog/2013/06/02/application-level-logging-with-aop-and-monolog/">application-level logging with AOP in PHP</a> and if you haven&rsquo;t read it yet please do this before proceeding to this article.</p>
 
@@ -949,25 +889,21 @@ composer require lisachenko/go-aop-php:0.4.0
 
 <p>Let&rsquo;s have a look at a typical class which is doing some important job for us:</p>
 
-<p>```php
-class Account
-{</p>
-
-<pre><code>protected $amount = 0;
-
-public function depositMoney($amount)
+<pre><code class="php">class Account
 {
-    $this-&gt;amount += $amount;
-}
+    protected $amount = 0;
 
-public function withdrawMoney($amount)
-{
-    $this-&gt;amount -= $amount;
+    public function depositMoney($amount)
+    {
+        $this-&gt;amount += $amount;
+    }
+
+    public function withdrawMoney($amount)
+    {
+        $this-&gt;amount -= $amount;
+    }
 }
 </code></pre>
-
-<p>}
-```</p>
 
 <p>Of course, it&rsquo;s the simplest implementation and real class can contain much more lines of code. Suppose that we deployed this code to the production server and after a while our project manager says that sometimes deposit withdrawal is not working. Oops!</p>
 
@@ -975,244 +911,220 @@ public function withdrawMoney($amount)
 
 <p>To write the logs we need a logger instance in our class and it&rsquo;s another disadvantage of OOP version of logging. Injecting logger adds a dependency which is not really needed by our class:</p>
 
-<p>```php
-class Account
-{</p>
-
-<pre><code>/**
- * @var LoggerInterface
- */
-protected $logger;
-
-public function __construct(LoggerInterface $logger)
+<pre><code class="php">class Account
 {
-    $this-&gt;logger = $logger;
+    /**
+     * @var LoggerInterface
+     */
+    protected $logger;
+
+    public function __construct(LoggerInterface $logger)
+    {
+        $this-&gt;logger = $logger;
+    }
+
+    // source code here
 }
-
-// source code here
 </code></pre>
-
-<p>}
-```</p>
 
 <p>Cross-cutting concerns such as logging can not be easily extracting on OOP level into the single class and this means that we should add logging to each method:</p>
 
-<p>```php
-class Account
-{</p>
-
-<pre><code>protected $amount = 0;
-
-/**
- * @var LoggerInterface
- */
-protected $logger;
-
-public function __construct(LoggerInterface $logger)
+<pre><code class="php">class Account
 {
-    $this-&gt;logger = $logger;
-}
+    protected $amount = 0;
 
-public function depositMoney($amount)
-{
-    $this-&gt;logger-&gt;info("Preparing to deposit money", array('amount' =&gt; $amount));
-    try {
-        $this-&gt;amount += $amount;
-        $this-&gt;logger-&gt;info("Deposit money successful", array('amount' =&gt; $amount));
-    } catch (Exception $e) {
-        $this-&gt;logger-&gt;info("Deposit money error: " . $e, array('amount' =&gt; $amount));
-        throw $e;
+    /**
+     * @var LoggerInterface
+     */
+    protected $logger;
+
+    public function __construct(LoggerInterface $logger)
+    {
+        $this-&gt;logger = $logger;
     }
-}
 
-public function withdrawMoney($amount)
-{
-    $this-&gt;logger-&gt;info("Preparing to withdraw money", array('amount' =&gt; $amount));
-    try {
-        $this-&gt;amount -= $amount;
-        $this-&gt;logger-&gt;info("Withdraw money successful", array('amount' =&gt; $amount));
-    } catch (Exception $e) {
-        $this-&gt;logger-&gt;info("Withdraw money error: " . $e, array('amount' =&gt; $amount));
-        throw $e;
+    public function depositMoney($amount)
+    {
+        $this-&gt;logger-&gt;info("Preparing to deposit money", array('amount' =&gt; $amount));
+        try {
+            $this-&gt;amount += $amount;
+            $this-&gt;logger-&gt;info("Deposit money successful", array('amount' =&gt; $amount));
+        } catch (Exception $e) {
+            $this-&gt;logger-&gt;info("Deposit money error: " . $e, array('amount' =&gt; $amount));
+            throw $e;
+        }
+    }
+
+    public function withdrawMoney($amount)
+    {
+        $this-&gt;logger-&gt;info("Preparing to withdraw money", array('amount' =&gt; $amount));
+        try {
+            $this-&gt;amount -= $amount;
+            $this-&gt;logger-&gt;info("Withdraw money successful", array('amount' =&gt; $amount));
+        } catch (Exception $e) {
+            $this-&gt;logger-&gt;info("Withdraw money error: " . $e, array('amount' =&gt; $amount));
+            throw $e;
+        }
     }
 }
 </code></pre>
 
-<p>}
-```
-Wow! Logging is so annoying! Instead of single line of useful code we have 6! For each important method! In my previous article we refactored logging to the aspect class:</p>
+<p>Wow! Logging is so annoying! Instead of single line of useful code we have 6! For each important method! In my previous article we refactored logging to the aspect class:</p>
 
-<p>```php
-use Go\Aop\Aspect;
+<pre><code class="php">use Go\Aop\Aspect;
 use Go\Aop\Intercept\MethodInvocation;
 use Go\Lang\Annotation\After;
 use Go\Lang\Annotation\Before;
-use Go\Lang\Annotation\Around;</p>
+use Go\Lang\Annotation\Around;
 
-<p>class LoggingAspect implements Aspect
-{</p>
-
-<pre><code>/**
- * Instance of logger (injected in constructor or by setter)
- */
-protected $logger;
-
-/**
- * @Before("within(**)")
- */
-public function beforeMethodExecution(MethodInvocation $invocation)
+class LoggingAspect implements Aspect
 {
-    $this-&gt;logger-&gt;info(
-        "Executing " . $invocation-&gt;getMethod()-&gt;name,
-        $invocation-&gt;getArguments()
-    );
+    /**
+     * Instance of logger (injected in constructor or by setter)
+     */
+    protected $logger;
+
+    /**
+     * @Before("within(**)")
+     */
+    public function beforeMethodExecution(MethodInvocation $invocation)
+    {
+        $this-&gt;logger-&gt;info(
+            "Executing " . $invocation-&gt;getMethod()-&gt;name,
+            $invocation-&gt;getArguments()
+        );
+    }
 }
 </code></pre>
-
-<p>}
-```</p>
 
 <p>This aspect is cool but it is too global due to the <code>within(**)</code> pointcut that matches all public and protected methods in every class. But what should we do if we want to log only specific methods in the application? We definitely need some markers for loggable methods. In the Java world we can use native annotations to mark the methods, but for PHP there isn&rsquo;t native support for annotations. However, there is a cool <a href="http://docs.doctrine-project.org/projects/doctrine-common/en/latest/reference/annotations.html">Doctrine Annotations</a> library that can be used in our own application to implement doc block annotations.</p>
 
 <p>Let&rsquo;s create an annotation class for @Loggable marker:</p>
 
-<p>```php
-namespace Annotation;</p>
+<pre><code class="php">namespace Annotation;
 
-<p>use Doctrine\Common\Annotations\Annotation;</p>
+use Doctrine\Common\Annotations\Annotation;
 
-<p>/<em>*
+/**
  * Loggable marker
  *
  * @Annotation
- </em>/
+ */
 class Loggable extends Annotation
-{</p>
+{
 
-<p>}
-```</p>
+}
+</code></pre>
 
 <p>The next step is to register this annotation in the registry of Doctrine (this is only needed if you did not register an autoloader previously):</p>
 
-<p>```php
-use Doctrine\Common\Annotations\AnnotationRegistry;</p>
+<pre><code class="php">use Doctrine\Common\Annotations\AnnotationRegistry;
 
-<p>AnnotationRegistry::registerFile(<strong>DIR</strong> . &lsquo;./Annotation/Loggable.php&rsquo;);
-```</p>
+AnnotationRegistry::registerFile(__DIR__ . './Annotation/Loggable.php');
+</code></pre>
 
 <p>Now we can modify an aspect by writing a pointcut expression that will match only specific methods. A pointcut expression is an expression that specifies where in the code the advice will be applied. With Go! AOP, you can create a pointcut by specifying namespace, class and method attributes among other things. But the easiest way to specify a pointcut for the logging aspect is by matching methods that have a specific <code>Annotation\Loggable</code> annotation marker in the phpDoc-block</p>
 
-<p>```php
-use Go\Aop\Aspect;
+<pre><code class="php">use Go\Aop\Aspect;
 use Go\Aop\Intercept\MethodInvocation;
 use Go\Lang\Annotation\Around;
-use Go\Lang\Annotation\Pointcut;</p>
+use Go\Lang\Annotation\Pointcut;
 
-<p>class LoggingAspect implements Aspect
-{</p>
-
-<pre><code>/**
- * Instance of logger (injected in constructor or by setter)
- */
-protected $logger;
-
-/**
- * @Pointcut("@annotation(Annotation\Loggable)")
- */
-protected function loggablePointcut() {}
-
-/**
- * @Around("$this-&gt;loggablePointcut")
- * @return mixed
- */
-public function aroundLoggable(MethodInvocation $invocation)
+class LoggingAspect implements Aspect
 {
-    $method = $invocation-&gt;getMethod()-&gt;name;
-    $this-&gt;logger-&gt;info("Entering " . $method, $invocation-&gt;getArguments());
-    try {
-        $result = $invocation-&gt;proceed();
-        $this-&gt;logger-&gt;info("Success: " . $method);
-    } catch (Exception $e) {
-        $this-&gt;logger-&gt;error("Error: " . $method . ' details: ' . $e);
-        throw $e;
+    /**
+     * Instance of logger (injected in constructor or by setter)
+     */
+    protected $logger;
+
+    /**
+     * @Pointcut("@annotation(Annotation\Loggable)")
+     */
+    protected function loggablePointcut() {}
+
+    /**
+     * @Around("$this-&gt;loggablePointcut")
+     * @return mixed
+     */
+    public function aroundLoggable(MethodInvocation $invocation)
+    {
+        $method = $invocation-&gt;getMethod()-&gt;name;
+        $this-&gt;logger-&gt;info("Entering " . $method, $invocation-&gt;getArguments());
+        try {
+            $result = $invocation-&gt;proceed();
+            $this-&gt;logger-&gt;info("Success: " . $method);
+        } catch (Exception $e) {
+            $this-&gt;logger-&gt;error("Error: " . $method . ' details: ' . $e);
+            throw $e;
+        }
+        return $result;
     }
-    return $result;
 }
 </code></pre>
 
-<p>}
-```
-Using the annotation means that developers never need to alter the pointcut expression to add or remove methods to the pointcut. A developer only has to add the annotation to a method to have the logging aspect applied. Let&rsquo;s refactor our original class to use only annotation for loggable methods:</p>
+<p>Using the annotation means that developers never need to alter the pointcut expression to add or remove methods to the pointcut. A developer only has to add the annotation to a method to have the logging aspect applied. Let&rsquo;s refactor our original class to use only annotation for loggable methods:</p>
 
-<p>```php</p>
+<pre><code class="php">
+use Annotation\Loggable;
 
-<p>use Annotation\Loggable;</p>
-
-<p>class Account
-{</p>
-
-<pre><code>protected $amount = 0;
-
-/**
- * @var LoggerInterface
- */
-protected $logger;
-
-public function __construct(LoggerInterface $logger)
+class Account
 {
-    $this-&gt;logger = $logger;
-}
+    protected $amount = 0;
 
-/**
- * @Loggable
- */
-public function depositMoney($amount)
-{
-    $this-&gt;amount += $amount;
-}
+    /**
+     * @var LoggerInterface
+     */
+    protected $logger;
 
-/**
- * @Loggable
- */
-public function withdrawMoney($amount)
-{
-    $this-&gt;amount -= $amount;
+    public function __construct(LoggerInterface $logger)
+    {
+        $this-&gt;logger = $logger;
+    }
+
+    /**
+     * @Loggable
+     */
+    public function depositMoney($amount)
+    {
+        $this-&gt;amount += $amount;
+    }
+
+    /**
+     * @Loggable
+     */
+    public function withdrawMoney($amount)
+    {
+        $this-&gt;amount -= $amount;
+    }
 }
 </code></pre>
-
-<p>}
-```</p>
 
 <p>We can also remove logger dependency, as there is no need in it any more:</p>
 
-<p>```php</p>
+<pre><code class="php">
+use Annotation\Loggable;
 
-<p>use Annotation\Loggable;</p>
-
-<p>class Account
-{</p>
-
-<pre><code>protected $amount = 0;
-
-/**
- * @Loggable
- */
-public function depositMoney($amount)
+class Account
 {
-    $this-&gt;amount += $amount;
-}
+    protected $amount = 0;
 
-/**
- * @Loggable
- */
-public function withdrawMoney($amount)
-{
-    $this-&gt;amount -= $amount;
+    /**
+     * @Loggable
+     */
+    public function depositMoney($amount)
+    {
+        $this-&gt;amount += $amount;
+    }
+
+    /**
+     * @Loggable
+     */
+    public function withdrawMoney($amount)
+    {
+        $this-&gt;amount -= $amount;
+    }
 }
 </code></pre>
-
-<p>}
-```</p>
 
 <p>We just finished our refactoring to use transparent logging with Go! AOP and Doctrine annotations. By having <code>@Loggable</code> marker we still have a good understanding that this method should be logged and have a nice aspect that do logging in one place.</p>
 ]]></content>

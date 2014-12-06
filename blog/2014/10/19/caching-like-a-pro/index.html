@@ -226,7 +226,7 @@
 
 <h3>Caching. Pre-Intermediate.</h3>
 
-<p>What&rsquo;s wrong with the previous example with caching? Ok, there are two issues in it. Firstly, we don&rsquo;t use a <a href="http://en.wikipedia.org/wiki/Dependency_injection">Dependency Injection (DI)</a> to inject instance of cache and we hard-coded cache initialization in constructor. Secondly, we put logic of caching into the original service. This implementation violates <a href="http://en.wikipedia.org/wiki/Single_responsibility_principle">Single Responsibility Principle (SRP)</a> and can cause a lot of problems with testing, as we won&rsquo;t be able to query the information directly from a data source without caching. We may as well violate another principle &ndash; <a href="http://en.wikipedia.org/wiki/Don%27t_repeat_yourself">DRY</a>. This may occur if there are several methods in the class that should be cached, and we write extra lines of code in each method:</p>
+<p>What&rsquo;s wrong with the previous example with caching? Ok, there are two issues in it. Firstly, we don&rsquo;t use a <a href="http://en.wikipedia.org/wiki/Dependency_injection">Dependency Injection (DI)</a> to inject instance of cache and we hard-coded cache initialization in constructor. Secondly, we put logic of caching into the original service. This implementation violates <a href="http://en.wikipedia.org/wiki/Single_responsibility_principle">Single Responsibility Principle (SRP)</a> and can cause a lot of problems with testing, as we won&rsquo;t be able to query the information directly from a data source without caching. We may as well violate another principle - <a href="http://en.wikipedia.org/wiki/Don%27t_repeat_yourself">DRY</a>. This may occur if there are several methods in the class that should be cached, and we write extra lines of code in each method:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -626,7 +626,7 @@
   
 
 
-<time datetime="2014-10-19T21:02:00+04:00" pubdate data-updated="true">Oct 19<sup>th</sup>, 2014</time>
+<time datetime="2014-10-19T20:02:00+03:00" pubdate data-updated="true"></time>
       
 
 <span class="categories">
@@ -700,7 +700,7 @@
 <section>
   <h1>Latest Tweets</h1>
   <ul id="tweets">
-    <li class="loading">Status updating...</li>
+    <li class="loading">Status updating&#8230;</li>
   </ul>
   <script type="text/javascript">
     $.domReady(function(){
@@ -717,7 +717,7 @@
 <section>
   <h1>GitHub Repos</h1>
   <ul id="gh_repos">
-    <li class="loading">Status updating...</li>
+    <li class="loading">Status updating&#8230;</li>
   </ul>
   
   <a href="https://github.com/lisachenko">@lisachenko</a> on GitHub

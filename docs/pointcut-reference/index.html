@@ -5,13 +5,13 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>Category: presentation - Go! Aspect-Oriented Framework</title>
+  <title>Quick pointcut reference - Go! Aspect-Oriented Framework</title>
   <meta name="author" content="Lisachenko Alexander">
 
   
-  <meta name="description" content="Category: presentation">
+  <meta name="description" content="Reference with available pointcuts for Go! AOP framework is a full list of recognized patterns to define a pointcut">
   
-  <meta name="keywords" content="AOP, PHP, Aspect-Oriented Programming, Hooks, Method Interception, Advice, Invocation, Go! AOP">
+  <meta name="keywords" content="pointcut, introduction, execution, within, syntax, grammar">
 
   <!-- http://t.co/dKP3o1e -->
   <meta name="HandheldFriendly" content="True">
@@ -19,7 +19,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://go.aopphp.com/blog/categories/presentation/">
+  <link rel="canonical" href="http://go.aopphp.com/docs/pointcut-reference/">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <script src="/javascripts/modernizr-2.0.js"></script>
@@ -89,32 +89,156 @@
 <article role="article">
   
   <header>
-    <h2 class="entry-title">Category: Presentation</h2>
+    <h2 class="entry-title">Quick Pointcut Reference</h2>
   </header>
   
-  <div id="blog-archives" class="category">
+  <h3>Method execution</h3>
+
+<p>Syntax: <code>execution(MemberModifiers ClassFilter[::|-&gt;]NamePattern(*))</code></p>
+
+<ul>
+<li><code>execution(public Example-&gt;method(*))</code> - Every execution of public method with the name &ldquo;method&rdquo; in the class &ldquo;Example&rdquo;</li>
+<li><code>execution(public Example-&gt;method1|method2(*))</code> - Every execution of one of the methods: &ldquo;method1&rdquo; or &ldquo;method2&rdquo; in the class &ldquo;Example&rdquo;</li>
+<li><code>execution(* Example\Aspect\*-&gt;method*(*))</code> - Execution of public or protected methods that have &ldquo;method&rdquo; prefix in their names and that methods are also inside &ldquo;Example\Aspect&rdquo; subnamespace (only single subnamespace)</li>
+<li><code>execution(public **::staticMethods(*))</code> - Every execution of any public static method &ldquo;staticMethods&rdquo; in every namespace (except global one)</li>
+</ul>
+
+
+<p>Annotation syntax: <code>@execution(NamespacePattern)</code></p>
+
+<ul>
+<li><code>@execution(Demo\Annotation\Cacheable)</code> - Every execution of any method that has &ldquo;Demo\Annotation\Cacheable&rdquo; annotation in the docBlock</li>
+</ul>
+
+
+<h3>Property access</h3>
+
+<p>Syntax: <code>access(MemberModifiers ClassFilter-&gt;NamePattern)</code></p>
+
+<ul>
+<li><code>access(public Example\Demo-&gt;test)</code> - Every access to the public property &ldquo;test&rdquo; in the class &ldquo;Example\Demo&rdquo;</li>
+<li><code>access(* Example\Aspect\*-&gt;fieldName)</code> - Every access (read and write) to a property &ldquo;fieldName&rdquo; (both protected and public) which belongs to a classes inside &ldquo;Example\Aspect&rdquo; subnamespace.</li>
+<li><code>access(protected **-&gt;someProtected*Property)</code> - Every access to the protected properties with names, that match &ldquo;someProtected*Property&rdquo; pattern in all classes.</li>
+</ul>
+
+
+<p>Annotation syntax: <code>@access(NamespacePattern)</code></p>
+
+<ul>
+<li><code>@access(Demo\Annotation\Cacheable)</code> - Every access to the property that has &ldquo;Demo\Annotation\Cacheable&rdquo; annotation in the docBlock</li>
+</ul>
+
+
+<h3>Function execution</h3>
+
+<p>Syntax: <code>execution(NamespacePattern(*))</code></p>
+
+<ul>
+<li><code>execution(**\file_get_contents())</code> - Every execution of system function &ldquo;file_get_contents&rdquo; within all namespaces</li>
+<li><code>execution(Example\Aspect\array_*(*))</code> - Every execution of any system function &ldquo;array_*&rdquo; within &ldquo;Example\Aspect&rdquo; namespace</li>
+</ul>
+
+
+<h3>Initialization</h3>
+
+<p>Syntax: <code>initialization(NamespacePattern)</code></p>
+
+<ul>
+<li><code>initialization(Demo\Example)</code> - Every initialization of object &ldquo;Demo\Example&rdquo; when &ldquo;new Demo\Example()&rdquo; is called</li>
+<li><code>initialization(Demo\**)</code> - Every initialization of object within &ldquo;Demo&rdquo; subnamespaces.</li>
+</ul>
+
+
+<p>Syntax: <code>staticinitialization(NamespacePattern)</code></p>
+
+<ul>
+<li><code>staticinitialization(Demo\Example)</code> - First time when the class &ldquo;Demo\Example&rdquo; is loaded into the memory of PHP</li>
+<li><code>staticinitialization(Demo\**)</code> - First time of loading of any class within &ldquo;Demo&rdquo; subnamespace into the memory of PHP</li>
+</ul>
+
+
+<h3>Lexical pointcuts</h3>
+
+<p>Syntax: <code>within(ClassFilter)</code></p>
+
+<ul>
+<li><code>within(Demo\Example)</code> - Every property access, method execution, initialization within &ldquo;Demo\Example&rdquo; class</li>
+<li><code>@within(Demo\Annotation\Loggable)</code> - Every property access, method execution, initialization within class that has &ldquo;Demo\Annotation\Loggable&rdquo; annotation in the docBlock</li>
+</ul>
+
+
+<h3>Logical combination</h3>
+
+<p>Logical negation syntax: <code>!Pointcut</code></p>
+
+<ul>
+<li><code>!execution(public **-&gt;*(*))</code> - Every execution of any method that is not public.</li>
+</ul>
+
+
+<p>Logical conjunction syntax: <code>Pointcut &amp;&amp; Pointcut</code></p>
+
+<ul>
+<li><code>execution(* Demo-&gt;*(*)) &amp;&amp; execution(public **-&gt;*(*))</code> - Every execution of public method in the class &ldquo;Demo&rdquo;</li>
+</ul>
+
+
+<p>Logical disjunction syntax: <code>Pointcut || Pointcut</code></p>
+
+<ul>
+<li><code>access(public Demo-&gt;foo) || access(public Another-&gt;bar)</code> - Every access to the properties &ldquo;Demo->foo&rdquo; or &ldquo;Another->bar&rdquo;</li>
+</ul>
+
+
+<p>Grouping pointcuts with parenthesis syntax: <code>(Pointcut)</code></p>
+
+<ul>
+<li><code>(access(* Demo-&gt;*) || access(* Another-&gt;*)) &amp;&amp; access(public **-&gt;*)</code></li>
+</ul>
+
+
+  
+    <footer>
+      <p class="meta">
+        
+        
+
+
+
+
+
 
 
 
   
-  <h2>2012</h2>
 
-<article>
+
+<time datetime="2014-12-06T19:22:00+03:00" pubdate data-updated="true"></time>
+        
+      </p>
+      
+        <div class="sharing">
   
-<h1><a href="/blog/2012/12/02/symfonycampua-2012-presentation-about-weaving-of-aspects-with-go-aop-library/">SymfonyCampUA-2012 presentation</a></h1>
-<time datetime="2012-12-02T00:00:00+03:00" pubdate><span class='month'>Dec</span> <span class='day'>02</span> <span class='year'>2012</span></time>
-
-<footer>
-  <span class="categories">posted in <a class='category' href='/blog/categories/aop/'>aop</a>, <a class='category' href='/blog/categories/presentation/'>presentation</a>, <a class='category' href='/blog/categories/refactoring/'>refactoring</a>, <a class='category' href='/blog/categories/symfony/'>symfony</a></span>
-</footer>
-
-
-</article>
-
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://go.aopphp.com/docs/pointcut-reference/index.html" data-via="lisachenko" data-counturl="http://go.aopphp.com/docs/pointcut-reference/index.html" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+  
 </div>
 
+      
+    </footer>
   
 </article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
 
 </div>
 
@@ -224,7 +348,10 @@
       var disqus_shortname = 'go-aop-php';
       
         
-        var disqus_script = 'count.js';
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://go.aopphp.com/docs/pointcut-reference/index.html';
+        var disqus_url = 'http://go.aopphp.com/docs/pointcut-reference/index.html';
+        var disqus_script = 'embed.js';
       
     (function () {
       var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;

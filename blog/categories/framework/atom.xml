@@ -4,7 +4,7 @@
   <title><![CDATA[Category: framework | Go! Aspect-Oriented Framework]]></title>
   <link href="http://go.aopphp.com/blog/categories/framework/atom.xml" rel="self"/>
   <link href="http://go.aopphp.com/"/>
-  <updated>2014-10-19T22:33:45+04:00</updated>
+  <updated>2014-12-06T23:46:13+03:00</updated>
   <id>http://go.aopphp.com/</id>
   <author>
     <name><![CDATA[Lisachenko Alexander]]></name>
@@ -16,7 +16,7 @@
   <entry>
     <title type="html"><![CDATA[What is new in version 0.5.0]]></title>
     <link href="http://go.aopphp.com/blog/2014/05/24/what-is-new-in-version-0-dot-5-dot-0/"/>
-    <updated>2014-05-24T21:26:00+04:00</updated>
+    <updated>2014-05-24T21:26:00+03:00</updated>
     <id>http://go.aopphp.com/blog/2014/05/24/what-is-new-in-version-0-dot-5-dot-0</id>
     <content type="html"><![CDATA[<p>New versions of frameworks are always exciting because they provide more features and can contain important fixes and changes. Go! AOP evolves too, so I prepared this article for users to underline most important changes.</p>
 
@@ -37,38 +37,32 @@
 
 <p>I received a lot of complains about usage of annotations for defining advices instead of pure PHP code. So I decided to give an alternative way for defining advisors with closures:</p>
 
-<p>```php</p>
-
-<pre><code>protected function configureAop(AspectContainer $container)
-{
-    $container-&gt;registerAdvisor(
-        new DefaultPointcutAdvisor(
-            new TrueMethodPointcut(),
-            new MethodBeforeInterceptor(function (MethodInvocation $invocation) {
-                echo "Hello", $invocation-&gt;getMethod()-&gt;name;
-            })
-        ),
-        'test'
-    );
-}
+<pre><code class="php">    protected function configureAop(AspectContainer $container)
+    {
+        $container-&gt;registerAdvisor(
+            new DefaultPointcutAdvisor(
+                new TrueMethodPointcut(),
+                new MethodBeforeInterceptor(function (MethodInvocation $invocation) {
+                    echo "Hello", $invocation-&gt;getMethod()-&gt;name;
+                })
+            ),
+            'test'
+        );
+    }
 </code></pre>
 
-<p><code>``
-This patch also optimizes injection of advices (interceptors) into the concrete class, so no more slow</code>serialize()/unserialize()<code>functions, they were replaced by</code>var_export()` and direct injection. I&rsquo;m also thinking about DSL builders for defining pointcuts in a more natural way:</p>
+<p>This patch also optimizes injection of advices (interceptors) into the concrete class, so no more slow <code>serialize()/unserialize()</code> functions, they were replaced by <code>var_export()</code> and direct injection. I&rsquo;m also thinking about DSL builders for defining pointcuts in a more natural way:</p>
 
-<p>```php</p>
-
-<pre><code>protected function configureAop(AspectContainer $container)
-{
-    $builder = new PointcutBuilder($container);
-    $builder-&gt;before('execution(public **-&gt;get(*)')-&gt;do(function (MethodInvocation $invocation) {
-        echo "Hello", $invocation-&gt;getMethod()-&gt;name;
-    });
-}
+<pre><code class="php">    protected function configureAop(AspectContainer $container)
+    {
+        $builder = new PointcutBuilder($container);
+        $builder-&gt;before('execution(public **-&gt;get(*)')-&gt;do(function (MethodInvocation $invocation) {
+            echo "Hello", $invocation-&gt;getMethod()-&gt;name;
+        });
+    }
 </code></pre>
 
-<p>```
-But this is not included into the current version, please ping me on github if your want it for the next version.</p>
+<p>But this is not included into the current version, please ping me on github if your want it for the next version.</p>
 
 <h3>Annotation class filter</h3>
 
@@ -78,21 +72,18 @@ But this is not included into the current version, please ping me on github if y
 
 <p>Here is an example of pointcut that intercepts execution of all public methods in the class marked with <code>Invariant</code> annotation:</p>
 
-<p>```php</p>
-
-<pre><code>/**
- * Verifies invariants for contract class
- *
- * @Around("@within(PhpDeal\Annotation\Invariant) &amp;&amp; execution(public **-&gt;*(*))")
- * @param MethodInvocation $invocation
- *
- * @throws ContractViolation
- * @return mixed
- */
-public function invariantContract(MethodInvocation $invocation) {...}
+<pre><code class="php">
+    /**
+     * Verifies invariants for contract class
+     *
+     * @Around("@within(PhpDeal\Annotation\Invariant) &amp;&amp; execution(public **-&gt;*(*))")
+     * @param MethodInvocation $invocation
+     *
+     * @throws ContractViolation
+     * @return mixed
+     */
+    public function invariantContract(MethodInvocation $invocation) {...}
 </code></pre>
-
-<p>```</p>
 
 <h3>Access to a doctrine annotations from the MethodInvocation class</h3>
 
@@ -100,59 +91,51 @@ public function invariantContract(MethodInvocation $invocation) {...}
 
 <p>Some aspects can analyze annotation to perform additional steps. Consider the following class where we define a ttl in the annotation for a method:</p>
 
-<p>```php
-use Demo\Annotation\Cacheable;</p>
+<pre><code class="php">use Demo\Annotation\Cacheable;
 
-<p>class General
-{</p>
-
-<pre><code>/**
- * Test cacheable by annotation
- *
- * @Cacheable(time=10)
- * @param float $timeToSleep Amount of time to sleep
- *
- * @return string
- */
-public function cacheMe($timeToSleep)
+class General
 {
-    usleep($timeToSleep * 1e6);
-    return 'Yeah';
+    /**
+     * Test cacheable by annotation
+     *
+     * @Cacheable(time=10)
+     * @param float $timeToSleep Amount of time to sleep
+     *
+     * @return string
+     */
+    public function cacheMe($timeToSleep)
+    {
+        usleep($timeToSleep * 1e6);
+        return 'Yeah';
+    }
 }
 </code></pre>
-
-<p>}
-```</p>
 
 <p>We can easily define a pointcut and advice that will intercept the execution of methods marked with <code>Cacheable</code> annotation and cache their results in the cache for a specified time. Should be cool, isn&rsquo;t it? Let&rsquo;s do this:</p>
 
-<p>```php
-use Demo\Annotation\Cacheable;
+<pre><code class="php">use Demo\Annotation\Cacheable;
 use Go\Aop\Aspect;
 use Go\Aop\Intercept\MethodInvocation;
-use Go\Lang\Annotation\Around;</p>
+use Go\Lang\Annotation\Around;
 
-<p>class CacheAspect implements Aspect
-{</p>
-
-<pre><code>/**
- * Cacheable methods
- *
- * @param MethodInvocation $invocation Invocation
- *
- * @Around("@annotation(Demo\Annotation\Cacheable)")
- */
-public function aroundCacheable(MethodInvocation $invocation)
+class CacheAspect implements Aspect
 {
-    /** @var Cacheable $cacheable */
-    $cacheable = $invocation-&gt;getMethod()-&gt;getAnnotation(Cacheable::class);
-    echo $cacheable-&gt;time; // TTL for the cache
-    return $invocation-&gt;proceed();
+    /**
+     * Cacheable methods
+     *
+     * @param MethodInvocation $invocation Invocation
+     *
+     * @Around("@annotation(Demo\Annotation\Cacheable)")
+     */
+    public function aroundCacheable(MethodInvocation $invocation)
+    {
+        /** @var Cacheable $cacheable */
+        $cacheable = $invocation-&gt;getMethod()-&gt;getAnnotation(Cacheable::class);
+        echo $cacheable-&gt;time; // TTL for the cache
+        return $invocation-&gt;proceed();
+    }
 }
 </code></pre>
-
-<p>}
-```</p>
 
 <h3>Simplified pointcut syntax for methods in the same class</h3>
 
@@ -166,7 +149,7 @@ execution(public **\*Controller-&gt;create(*) )
 || execution(public **\*Controller-&gt;delete(*) )
 </code></p>
 
-<p>it is possible to use or'ed constructions with <code>|</code> sign:
+<p>it is possible to use or&#8217;ed constructions with <code>|</code> sign:
 <code>
 execution(public **\*Controller-&gt;create|get|update|delete(*))
 </code>
@@ -178,27 +161,23 @@ Much cleaner and more readable!</p>
 
 <p>It is not a secret, that framework performs load-time weaving of aspects during loading the source file into PHP. Before PHP will be able to parse it and load, Go! AOP scans tokens and builds reflection to analyze a pointcuts. At that moment of class loading there is no information about full inheritance of class (interfaces, abstract classes, traits). This was known limitation of framework that it wasn&rsquo;t possible to match parent methods in the children class:</p>
 
-<p>```php
-class Greeting
-{</p>
-
-<pre><code>public hello($name)
+<pre><code class="php">class Greeting
 {
-    echo "hello $name";
+    public hello($name)
+    {
+        echo "hello $name";
+    }
 }
-</code></pre>
 
-<p>}</p>
-
-<p>class Example extends Greeting
+class Example extends Greeting
 {
-}</p>
+}
 
-<p>// pointcut is @Before(&ldquo;execution(public Example-><em>(</em>))&rdquo;)</p>
+// pointcut is @Before("execution(public Example-&gt;*(*))")
 
-<p>$e = new Example();
-$e->hello(&ldquo;User&rdquo;); // advice is not applied, because method is defined in the Greeting class
-```</p>
+$e = new Example();
+$e-&gt;hello("User"); // advice is not applied, because method is defined in the Greeting class
+</code></pre>
 
 <p>After some research I found a way to recursively load parent classes and scan tokens. This is the major change for a dessert, but it can have an impact on the current aspects that uses <code>within</code> or similar pointcuts.</p>
 ]]></content>
@@ -207,7 +186,7 @@ $e->hello(&ldquo;User&rdquo;); // advice is not applied, because method is defin
   <entry>
     <title type="html"><![CDATA[Aspect-Oriented programming with Yii]]></title>
     <link href="http://go.aopphp.com/blog/2013/09/28/aspect-oriented-programming-with-yii/"/>
-    <updated>2013-09-28T16:28:00+04:00</updated>
+    <updated>2013-09-28T16:28:00+03:00</updated>
     <id>http://go.aopphp.com/blog/2013/09/28/aspect-oriented-programming-with-yii</id>
     <content type="html"><![CDATA[<p>Aspect-Oriented programming becomes more popular for PHP, but it requires good knowledge of OOP and can be very cumbersome for beginners. So it&rsquo;s important to have a working examples and manuals to have a possibility to run it locally with favorite framework. Go! AOP provides all the necessary functionality for configuration of AOP into any frameworks, but integration process can be very tricky, so configuration is not so easy. In this article we will configure a working example for Yii framework.</p>
 
@@ -216,9 +195,8 @@ $e->hello(&ldquo;User&rdquo;); // advice is not applied, because method is defin
 
 <p>Let&rsquo;s start! First of all, we need an empty <code>yii-aspect</code> directory for our project:</p>
 
-<p><code>bash
-mkdir yii-aspect &amp;&amp; cd yii-aspect
-</code></p>
+<pre><code class="bash">mkdir yii-aspect &amp;&amp; cd yii-aspect
+</code></pre>
 
 <p>Next step is to install dependencies: Yii and Go! AOP frameworks. Go! AOP is registered on packagist and can be easily installed with composer:
 <code>bash
@@ -238,151 +216,146 @@ yiic webapp app
 Yii will generate a directory <code>app</code> with default project structure and files. This project can be opened in the browser, but AOP isn&rsquo;t enabled right now. To enable AOP we should prepare our application to have an ability to use it. To enable AOP we need to update the front controller of our application (<code>./app/index.php</code>) in the following way:</p>
 
 <p>Add this lines to the top of file before original content:
-```php
-&lt;?php
-use Go\Instrument\Transformer\FilterInjectorTransformer;</p>
-
-<p>// Load the composer autoloader
-include <strong>DIR</strong> . &lsquo;/../vendor/autoload.php&rsquo;;</p>
-
-<p>// Load AOP kernel
-include <strong>DIR</strong> . &lsquo;/aspect.php&rsquo;;
-```</p>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span><span class="o">?</span><span class="nx">php</span>
+</span><span class='line'><span class="k">use</span> <span class="nx">Go\Instrument\Transformer\FilterInjectorTransformer</span><span class="p">;</span><span class="o">&lt;/</span><span class="nx">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;//</span> <span class="nx">Load</span> <span class="nx">the</span> <span class="nx">composer</span> <span class="nx">autoloader</span>
+</span><span class='line'><span class="k">include</span> <span class="o">&lt;</span><span class="nx">strong</span><span class="o">&gt;</span><span class="nx">DIR</span><span class="o">&lt;/</span><span class="nx">strong</span><span class="o">&gt;</span> <span class="o">.</span> <span class="o">&amp;</span><span class="nx">lsquo</span><span class="p">;</span><span class="o">/../</span><span class="nx">vendor</span><span class="o">/</span><span class="nx">autoload</span><span class="o">.</span><span class="nx">php</span><span class="o">&amp;</span><span class="nx">rsquo</span><span class="p">;;</span><span class="o">&lt;/</span><span class="nx">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;//</span> <span class="nx">Load</span> <span class="nx">AOP</span> <span class="nx">kernel</span>
+</span><span class='line'><span class="k">include</span> <span class="o">&lt;</span><span class="nx">strong</span><span class="o">&gt;</span><span class="nx">DIR</span><span class="o">&lt;/</span><span class="nx">strong</span><span class="o">&gt;</span> <span class="o">.</span> <span class="o">&amp;</span><span class="nx">lsquo</span><span class="p">;</span><span class="o">/</span><span class="nx">aspect</span><span class="o">.</span><span class="nx">php</span><span class="o">&amp;</span><span class="nx">rsquo</span><span class="p">;;</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <p>And replace initialization of Yii at the bottom of file from <code>require_once($yii)</code> to <code>require_once(FilterInjectorTransformer::rewrite($yii))</code>. This is needed to give a hook for the Go! AOP framework to weave aspects into classes. Aspects are defined as separated classes and included in the <code>./aspect.php</code> file. Let&rsquo;s move to it and to the aspect kernel</p>
 
-<p>```php</p>
+<pre><code class="php">
+include __DIR__ . '/protected/extensions/go-aop-php/ApplicationAspectKernel.php';
 
-<p>include <strong>DIR</strong> . &lsquo;/protected/extensions/go-aop-php/ApplicationAspectKernel.php&rsquo;;</p>
+// Prevent an error about nesting level
+ini_set('xdebug.max_nesting_level', 500);
 
-<p>// Prevent an error about nesting level
-ini_set(&lsquo;xdebug.max_nesting_level&rsquo;, 500);</p>
-
-<p>// Initialize an application aspect container
+// Initialize an application aspect container
 $applicationAspectKernel = ApplicationAspectKernel::getInstance();
-$applicationAspectKernel->init(array(</p>
-
-<pre><code>'debug' =&gt; true,
-// Application root directory
-'appDir'   =&gt; __DIR__ . '/../',
-// Cache directory
-'cacheDir' =&gt; __DIR__ . './protected/aspect',
-'excludePaths' =&gt; array(
-    __DIR__ . './protected/aspect'
-)
+$applicationAspectKernel-&gt;init(array(
+    'debug' =&gt; true,
+    // Application root directory
+    'appDir'   =&gt; __DIR__ . '/../',
+    // Cache directory
+    'cacheDir' =&gt; __DIR__ . './protected/aspect',
+    'excludePaths' =&gt; array(
+        __DIR__ . './protected/aspect'
+    )
+));
 </code></pre>
-
-<p>));
-```</p>
 
 <p>This is typical configuration of Go! AOP framework where we can adjust some directories and paths. I think that this config is pretty clear to understand. Only <code>debug</code> parameter is really important. For production mode it should be <code>false</code>, but for development mode it should be enabled to enable better debugging and cache refreshing.</p>
 
 <p>In this file we also include a strange file <code>ApplicationAspectKernel.php</code>. This file contains definition of aspect kernel for our application and it&rsquo;s very simple:</p>
 
-<p>```php</p>
+<pre><code class="php">
+use Go\Core\AspectKernel;
+use Go\Core\AspectContainer;
 
-<p>use Go\Core\AspectKernel;
-use Go\Core\AspectContainer;</p>
-
-<p>/<em>*
+/**
  * Application Aspect Kernel
- </em>/
-class ApplicationAspectKernel extends AspectKernel
-{</p>
-
-<pre><code>/**
- * Configure an AspectContainer with advisors, aspects and pointcuts
- *
- * @param AspectContainer $container
- *
- * @return void
  */
-protected function configureAop(AspectContainer $container)
+class ApplicationAspectKernel extends AspectKernel
 {
-    // todo: register aspects, advisors, pointcuts, etc
+
+    /**
+     * Configure an AspectContainer with advisors, aspects and pointcuts
+     *
+     * @param AspectContainer $container
+     *
+     * @return void
+     */
+    protected function configureAop(AspectContainer $container)
+    {
+        // todo: register aspects, advisors, pointcuts, etc
+    }
 }
 </code></pre>
 
-<p>}
-```</p>
-
 <p>There is only one method to define: <code>configureAop</code> that is used for AOP configuration. We can create an aspect now and register it in the kernel:</p>
 
-<p>```php
-&lt;?php
-// app/protected/extensions/go-aop-php/TestMonitorAspect.php</p>
+<pre><code class="php">&lt;?php
+// app/protected/extensions/go-aop-php/TestMonitorAspect.php
 
-<p>namespace Aspect;</p>
+namespace Aspect;
 
-<p>use Go\Aop\Aspect;
+use Go\Aop\Aspect;
 use Go\Aop\Intercept\FieldAccess;
 use Go\Aop\Intercept\MethodInvocation;
 use Go\Lang\Annotation\After;
 use Go\Lang\Annotation\Before;
 use Go\Lang\Annotation\Around;
-use Go\Lang\Annotation\Pointcut;</p>
+use Go\Lang\Annotation\Pointcut;
 
-<p>/<em>*
+/**
  * Monitor aspect
- </em>/
+ */
 class TestMonitorAspect implements Aspect
-{</p>
-
-<pre><code>/**
- * Method that will be called before real method
- *
- * @param MethodInvocation $invocation Invocation
- * @Before("within(**)")
- */
-public function beforeMethodExecution(MethodInvocation $invocation)
 {
-    $obj = $invocation-&gt;getThis();
-    echo 'Calling Before Interceptor for method: ',
-    is_object($obj) ? get_class($obj) : $obj,
-    $invocation-&gt;getMethod()-&gt;isStatic() ? '::' : '-&gt;',
-    $invocation-&gt;getMethod()-&gt;getName(),
-    '()',
-    ' with arguments: ',
-    json_encode($invocation-&gt;getArguments()),
-    "&lt;br&gt;\n";
+
+    /**
+     * Method that will be called before real method
+     *
+     * @param MethodInvocation $invocation Invocation
+     * @Before("within(**)")
+     */
+    public function beforeMethodExecution(MethodInvocation $invocation)
+    {
+        $obj = $invocation-&gt;getThis();
+        echo 'Calling Before Interceptor for method: ',
+        is_object($obj) ? get_class($obj) : $obj,
+        $invocation-&gt;getMethod()-&gt;isStatic() ? '::' : '-&gt;',
+        $invocation-&gt;getMethod()-&gt;getName(),
+        '()',
+        ' with arguments: ',
+        json_encode($invocation-&gt;getArguments()),
+        "&lt;br&gt;\n";
+    }
 }
 </code></pre>
 
-<p>}
-```
-&hellip; and registration in the kernel:</p>
+<p>&hellip; and registration in the kernel:</p>
 
-<p>```php
-&lt;?php
-// app/protected/extensions/go-aop-php/ApplicationAspectKernel.php</p>
+<pre><code class="php">&lt;?php
+// app/protected/extensions/go-aop-php/ApplicationAspectKernel.php
 
-<p>require_once &lsquo;TestMonitorAspect.php&rsquo;;</p>
+require_once 'TestMonitorAspect.php';
 
-<p>use Aspect\TestMonitorAspect;
+use Aspect\TestMonitorAspect;
 use Go\Core\AspectKernel;
-use Go\Core\AspectContainer;</p>
+use Go\Core\AspectContainer;
 
-<p>/<em>*
+/**
  * Application Aspect Kernel
- </em>/
-class ApplicationAspectKernel extends AspectKernel
-{</p>
-
-<pre><code>/**
- * Configure an AspectContainer with advisors, aspects and pointcuts
- *
- * @param AspectContainer $container
- *
- * @return void
  */
-protected function configureAop(AspectContainer $container)
+class ApplicationAspectKernel extends AspectKernel
 {
-    $container-&gt;registerAspect(new TestMonitorAspect());
+
+    /**
+     * Configure an AspectContainer with advisors, aspects and pointcuts
+     *
+     * @param AspectContainer $container
+     *
+     * @return void
+     */
+    protected function configureAop(AspectContainer $container)
+    {
+        $container-&gt;registerAspect(new TestMonitorAspect());
+    }
 }
 </code></pre>
-
-<p>}
-```</p>
 
 <p>That&rsquo;s all )</p>
 
@@ -395,16 +368,15 @@ protected function configureAop(AspectContainer $container)
 
 <p>PS. If you want to create an empty project with single line you can run:</p>
 
-<p><code>bash
-composer create-project lisachenko/yii-aspect --prefer-source --stability=dev
-</code></p>
+<pre><code class="bash">composer create-project lisachenko/yii-aspect --prefer-source --stability=dev
+</code></pre>
 ]]></content>
   </entry>
   
   <entry>
     <title type="html"><![CDATA[Aspect-Oriented Framework for PHP]]></title>
     <link href="http://go.aopphp.com/blog/2013/02/11/aspect-oriented-framework-for-php/"/>
-    <updated>2013-02-11T22:55:00+04:00</updated>
+    <updated>2013-02-11T22:55:00+03:00</updated>
     <id>http://go.aopphp.com/blog/2013/02/11/aspect-oriented-framework-for-php</id>
     <content type="html"><![CDATA[<p>Go! is a PHP 5.4 framework based on OOP and AOP paradigms and designed by Lisachenko Alexander.
 It allows developers to add support of AOP to every PHP application.</p>

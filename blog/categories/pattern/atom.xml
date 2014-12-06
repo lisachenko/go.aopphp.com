@@ -4,7 +4,7 @@
   <title><![CDATA[Category: pattern | Go! Aspect-Oriented Framework]]></title>
   <link href="http://go.aopphp.com/blog/categories/pattern/atom.xml" rel="self"/>
   <link href="http://go.aopphp.com/"/>
-  <updated>2014-10-19T22:33:45+04:00</updated>
+  <updated>2014-12-06T23:46:13+03:00</updated>
   <id>http://go.aopphp.com/</id>
   <author>
     <name><![CDATA[Lisachenko Alexander]]></name>
@@ -16,7 +16,7 @@
   <entry>
     <title type="html"><![CDATA[Implementing reusable fluent interface pattern in PHP with AOP]]></title>
     <link href="http://go.aopphp.com/blog/2013/03/19/implementing-fluent-interface-pattern-in-php/"/>
-    <updated>2013-03-19T22:44:00+04:00</updated>
+    <updated>2013-03-19T22:44:00+03:00</updated>
     <id>http://go.aopphp.com/blog/2013/03/19/implementing-fluent-interface-pattern-in-php</id>
     <content type="html"><![CDATA[<p>During software development one of the most important goals is the readability of source code. There are special
 techniques and tips that help us to improve the readability of source code. One of the techniques of improving the
@@ -38,69 +38,108 @@ where you can get excellent food for thoughts.</p>
 
 <p>Let&rsquo;s take a simple user entity, which has the following properties: name, last name and the password:</p>
 
-<p><code>php
-&lt;?php
+<pre><code class="php">&lt;?php
 class User
 {
     public $name;
     public $surname;
     public $password;
 }
-</code>
-An excellent class that is easy to use:
-```php
-&lt;?php
-$user = new User;</p>
+</code></pre>
 
-<p>$user->name = &lsquo;John&rsquo;;
-$user->surname = &lsquo;Doe&rsquo;;
-$user->password = &lsquo;root&rsquo;;
-```</p>
+<p>An excellent class that is easy to use:
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span><span class="o">?</span><span class="nx">php</span>
+</span><span class='line'><span class="nv">$user</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">User</span><span class="p">;</span><span class="o">&lt;/</span><span class="nx">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span><span class="nv">$user</span><span class="o">-&gt;</span><span class="na">name</span> <span class="o">=</span> <span class="o">&amp;</span><span class="nx">lsquo</span><span class="p">;</span><span class="nx">John</span><span class="o">&amp;</span><span class="nx">rsquo</span><span class="p">;;</span>
+</span><span class='line'><span class="nv">$user</span><span class="o">-&gt;</span><span class="na">surname</span> <span class="o">=</span> <span class="o">&amp;</span><span class="nx">lsquo</span><span class="p">;</span><span class="nx">Doe</span><span class="o">&amp;</span><span class="nx">rsquo</span><span class="p">;;</span>
+</span><span class='line'><span class="nv">$user</span><span class="o">-&gt;</span><span class="na">password</span> <span class="o">=</span> <span class="o">&amp;</span><span class="nx">lsquo</span><span class="p">;</span><span class="nx">root</span><span class="o">&amp;</span><span class="nx">rsquo</span><span class="p">;;</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <p>It is easy to notice that we have no validation and somebody can set a blank password, which is not very good. In
 addition, it would be nice to know that the field values are immutable. These several considerations lead us to the
 idea that properties should be protected or private and access to them should be carried out with a pair of getter / setter.</p>
 
 <p>Suit the action to the word:
-```php
-&lt;?php
-class User
-{</p>
-
-<pre><code>protected $name;
-protected $surname;
-protected $password;
-
-public function setName($name)
-{
-    $this-&gt;name = $name;
-}
-
-public function setSurname($surname)
-{
-    $this-&gt;surname = $surname;
-}
-
-public function setPassword($password)
-{
-    if (!$password) {
-        throw new InvalidArgumentException("Password shouldn't be empty");
-    }
-    $this-&gt;password = $password;
-}
-</code></pre>
-
-<p>}
-<code>
-For the new class the configuration has changed a little and now we are using setters:
-</code>php
-&lt;?php
-$user = new User;</p>
-
-<p>$user->setName(&lsquo;John&rsquo;);
-$user->setSurname(&lsquo;Doe&rsquo;);
-$user->setPassword(&lsquo;root&rsquo;);
-```</p>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span><span class="o">?</span><span class="nx">php</span>
+</span><span class='line'><span class="k">class</span> <span class="nc">User</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">protected</span> <span class="nv">$name</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">protected</span> <span class="nv">$surname</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">protected</span> <span class="nv">$password</span><span class="p">;</span><span class="o">&lt;/</span><span class="nx">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="nx">pre</span><span class="o">&gt;&lt;</span><span class="nx">code</span><span class="o">&gt;</span><span class="k">public</span> <span class="k">function</span> <span class="nf">setName</span><span class="p">(</span><span class="nv">$name</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="nv">$this</span><span class="o">-&amp;</span><span class="nx">gt</span><span class="p">;</span><span class="nx">name</span> <span class="o">=</span> <span class="nv">$name</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">public</span> <span class="k">function</span> <span class="nf">setSurname</span><span class="p">(</span><span class="nv">$surname</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="nv">$this</span><span class="o">-&amp;</span><span class="nx">gt</span><span class="p">;</span><span class="nx">surname</span> <span class="o">=</span> <span class="nv">$surname</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">public</span> <span class="k">function</span> <span class="nf">setPassword</span><span class="p">(</span><span class="nv">$password</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nv">$password</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">throw</span> <span class="k">new</span> <span class="nx">InvalidArgumentException</span><span class="p">(</span><span class="s2">&quot;Password shouldn&#39;t be empty&quot;</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>    <span class="nv">$this</span><span class="o">-&amp;</span><span class="nx">gt</span><span class="p">;</span><span class="nx">password</span> <span class="o">=</span> <span class="nv">$password</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="nx">code</span><span class="o">&gt;&lt;/</span><span class="nx">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span><span class="p">}</span>
+</span><span class='line'><span class="o">&lt;</span><span class="nx">code</span><span class="o">&gt;</span>
+</span><span class='line'><span class="k">For</span> <span class="nx">the</span> <span class="k">new</span> <span class="k">class</span> <span class="nc">the</span> <span class="nx">configuration</span> <span class="nx">has</span> <span class="nx">changed</span> <span class="nx">a</span> <span class="nx">little</span> <span class="k">and</span> <span class="nx">now</span> <span class="nx">we</span> <span class="nx">are</span> <span class="nx">using</span> <span class="nx">setters</span><span class="o">:</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="nx">code</span><span class="o">&gt;</span><span class="nx">php</span>
+</span><span class='line'><span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span><span class="o">?</span><span class="nx">php</span>
+</span><span class='line'><span class="nv">$user</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">User</span><span class="p">;</span><span class="o">&lt;/</span><span class="nx">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span><span class="nv">$user</span><span class="o">-&gt;</span><span class="na">setName</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">lsquo</span><span class="p">;</span><span class="nx">John</span><span class="o">&amp;</span><span class="nx">rsquo</span><span class="p">;);</span>
+</span><span class='line'><span class="nv">$user</span><span class="o">-&gt;</span><span class="na">setSurname</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">lsquo</span><span class="p">;</span><span class="nx">Doe</span><span class="o">&amp;</span><span class="nx">rsquo</span><span class="p">;);</span>
+</span><span class='line'><span class="nv">$user</span><span class="o">-&gt;</span><span class="na">setPassword</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">lsquo</span><span class="p">;</span><span class="nx">root</span><span class="o">&amp;</span><span class="nx">rsquo</span><span class="p">;);</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <p>Not a big deal, right? But what if we need to set up 20 properties? 30 properties? This code will be flooded with setter
 calls and $user variable references. If the variable name will be $superImportantUser then readability of the source
@@ -114,46 +153,73 @@ calling context to the following method in the chain. The context is the return 
 be any object, including the current one.</p>
 
 <p>To implement a fluent interface, we need all the methods-setters to return the current object:
-```php
-&lt;?php
-class User
-{</p>
-
-<pre><code>protected $name;
-protected $surname;
-protected $password;
-
-public function setName($name)
-{
-    $this-&gt;name = $name;
-    return $this;
-}
-
-public function setSurname($surname)
-{
-    $this-&gt;surname = $surname;
-    return $this;
-}
-
-public function setPassword($password)
-{
-    if (!$password) {
-        throw new InvalidArgumentException("Password shouldn't be empty");
-    }
-    $this-&gt;password = $password;
-    return $this;
-}
-</code></pre>
-
-<p>}
-```
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span><span class="o">?</span><span class="nx">php</span>
+</span><span class='line'><span class="k">class</span> <span class="nc">User</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">protected</span> <span class="nv">$name</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">protected</span> <span class="nv">$surname</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">protected</span> <span class="nv">$password</span><span class="p">;</span><span class="o">&lt;/</span><span class="nx">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="nx">pre</span><span class="o">&gt;&lt;</span><span class="nx">code</span><span class="o">&gt;</span><span class="k">public</span> <span class="k">function</span> <span class="nf">setName</span><span class="p">(</span><span class="nv">$name</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="nv">$this</span><span class="o">-&amp;</span><span class="nx">gt</span><span class="p">;</span><span class="nx">name</span> <span class="o">=</span> <span class="nv">$name</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">return</span> <span class="nv">$this</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">public</span> <span class="k">function</span> <span class="nf">setSurname</span><span class="p">(</span><span class="nv">$surname</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="nv">$this</span><span class="o">-&amp;</span><span class="nx">gt</span><span class="p">;</span><span class="nx">surname</span> <span class="o">=</span> <span class="nv">$surname</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">return</span> <span class="nv">$this</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">public</span> <span class="k">function</span> <span class="nf">setPassword</span><span class="p">(</span><span class="nv">$password</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nv">$password</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">throw</span> <span class="k">new</span> <span class="nx">InvalidArgumentException</span><span class="p">(</span><span class="s2">&quot;Password shouldn&#39;t be empty&quot;</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>    <span class="nv">$this</span><span class="o">-&amp;</span><span class="nx">gt</span><span class="p">;</span><span class="nx">password</span> <span class="o">=</span> <span class="nv">$password</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">return</span> <span class="nv">$this</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="nx">code</span><span class="o">&gt;&lt;/</span><span class="nx">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
 This approach will allow us to make the call chain:</p>
 
-<p><code>php
-&lt;?php
+<pre><code class="php">&lt;?php
 $user = new User;
 $user-&gt;setName('John')-&gt;setSurname('Doe')-&gt;setPassword('root');
-</code></p>
+</code></pre>
 
 <p>As you can see, the configuration of the object now takes up less space and is much easier to read. We achieved our
 goal! At this point, many developers will ask: &ldquo;So what?&rdquo; Ok, then try to answer the question: &ldquo;What&rsquo;s wrong with fluent
@@ -178,89 +244,82 @@ and Go! AOP library.</p>
 
 <p>First of all, our marker interface:</p>
 
-<p>```php
-&lt;?php
-/<em>*
+<pre><code class="php">&lt;?php
+/**
  * Fluent interface marker
- </em>/
-interface FluentInterface
-{</p>
-
-<p>}
-```
-Fluent interface implementation in the form of advice within aspect:</p>
-
-<p>```php
-&lt;?php
-use Go\Aop\Aspect;
-use Go\Aop\Intercept\MethodInvocation;
-use Go\Lang\Annotation\Around;</p>
-
-<p>class FluentInterfaceAspect implements Aspect
-{</p>
-
-<pre><code>/**
- * Fluent interface advice
- *
- * @Around("within(FluentInterface+) &amp;&amp; execution(public **-&gt;set*(*))")
- *
- * @param MethodInvocation $invocation
- * @return mixed|null|object
  */
-protected function aroundMethodExecution(MethodInvocation $invocation)
+interface FluentInterface
 {
-    $result = $invocation-&gt;proceed();
-    return $result!==null ? $result : $invocation-&gt;getThis();
+
 }
 </code></pre>
 
-<p>}
-```</p>
+<p>Fluent interface implementation in the form of advice within aspect:</p>
 
-<p>Just a quick explanation &ndash; &ldquo;Around&rdquo; advice sets the hook &ldquo;around&rdquo; the original method and is fully responsible for
+<pre><code class="php">&lt;?php
+use Go\Aop\Aspect;
+use Go\Aop\Intercept\MethodInvocation;
+use Go\Lang\Annotation\Around;
+
+class FluentInterfaceAspect implements Aspect
+{
+    /**
+     * Fluent interface advice
+     *
+     * @Around("within(FluentInterface+) &amp;&amp; execution(public **-&gt;set*(*))")
+     *
+     * @param MethodInvocation $invocation
+     * @return mixed|null|object
+     */
+    protected function aroundMethodExecution(MethodInvocation $invocation)
+    {
+        $result = $invocation-&gt;proceed();
+        return $result!==null ? $result : $invocation-&gt;getThis();
+    }
+}
+</code></pre>
+
+<p>Just a quick explanation - &ldquo;Around&rdquo; advice sets the hook &ldquo;around&rdquo; the original method and is fully responsible for
 whether the original method will be called or not, and is responsible for the result that will be returned. In the
 advice, we call original method (setter invocation) and if it doesn&rsquo;t return anything we just return the original
 object $invocation->getThis(). That is all ) That is a useful pattern implementation just in a few lines of code. Using
 the fluent interface is now easy and sexy :)</p>
 
-<p>```php
-&lt;?php
+<pre><code class="php">&lt;?php
 class User implements FluentInterface
-{</p>
-
-<pre><code>protected $name;
-protected $surname;
-protected $password;
-
-public function setName($name)
 {
-    $this-&gt;name = $name;
-}
+    protected $name;
+    protected $surname;
+    protected $password;
 
-public function setSurname($surname)
-{
-    $this-&gt;surname = $surname;
-}
-
-public function setPassword($password)
-{
-    if (!$password) {
-        throw new InvalidArgumentException("Password shouldn't be empty");
+    public function setName($name)
+    {
+        $this-&gt;name = $name;
     }
-    $this-&gt;password = $password;
+
+    public function setSurname($surname)
+    {
+        $this-&gt;surname = $surname;
+    }
+
+    public function setPassword($password)
+    {
+        if (!$password) {
+            throw new InvalidArgumentException("Password shouldn't be empty");
+        }
+        $this-&gt;password = $password;
+    }
 }
 </code></pre>
 
-<p>}
-```
-And usage:</p>
+<p>And usage:</p>
 
-<p><code>php
-&lt;?php
+<pre><code class="php">&lt;?php
 $user = new User;
 $user-&gt;setName('John')-&gt;setSurname('Doe')-&gt;setPassword('root');
-</code>
-No more copying &ldquo;return $this&rdquo; for hundreds of methods, only pure source code, intuitive FluentInterface and
+</code></pre>
+
+<p>No more copying &ldquo;return $this&rdquo; for hundreds of methods, only pure source code, intuitive FluentInterface and
 implementation of FluentInterface in the form of a simple aspect.</p>
 ]]></content>
   </entry>

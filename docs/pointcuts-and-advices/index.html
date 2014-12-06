@@ -205,6 +205,8 @@
 
 <p>Declared pointcut can be referenced in advice by short name <code>pointcut="examplePublicMethods()"</code> or by full-qualified name, for example <code>pointcut="Aspect\DebugAspect-&gt;examplePublicMethods()"</code>.</p>
 
+<p>For pointcut syntax, please see <a href="/docs/pointcut-reference/">Pointcut Reference</a> page.</p>
+
 <h3>Annotation pointcut</h3>
 
 <p>Annotation pointcut can be used to match against the set of annotations on the annotated element. An annotation pattern element has following form: <code>@annotation(Annotation\Class\Name)</code>. This pointcut will match all methods with <code>Anotation\Class\Name</code> annotation in phpDoc block. Following example shows how to implement transparent caching with aspects and annotation pointcut:</p>
@@ -330,7 +332,7 @@
 <span class='line-number'>33</span>
 <span class='line-number'>34</span>
 <span class='line-number'>35</span>
-</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="cp">&lt;?php</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="o">&lt;?</span><span class="nx">php</span>
 </span><span class='line'>
 </span><span class='line'><span class="k">use</span> <span class="nx">Go\Aop\Aspect</span><span class="p">;</span>
 </span><span class='line'><span class="k">use</span> <span class="nx">Go\Aop\Intercept\MethodInvocation</span><span class="p">;</span>
@@ -346,7 +348,7 @@
 </span><span class='line'><span class="sd">     *</span>
 </span><span class='line'><span class="sd">     * @param MethodInvocation $invocation Invocation</span>
 </span><span class='line'><span class="sd">     *</span>
-</span><span class='line'><span class="sd">     * @Around(&quot;@annotation(Annotation\Cacheable)&quot;)</span>
+</span><span class='line'><span class="sd">     * @Around(&quot;@execution(Annotation\Cacheable)&quot;)</span>
 </span><span class='line'><span class="sd">     */</span>
 </span><span class='line'>    <span class="k">public</span> <span class="k">function</span> <span class="nf">aroundCacheable</span><span class="p">(</span><span class="nx">MethodInvocation</span> <span class="nv">$invocation</span><span class="p">)</span>
 </span><span class='line'>    <span class="p">{</span>
@@ -547,7 +549,7 @@
   
 
 
-<time datetime="2013-02-12T22:51:00+04:00" pubdate data-updated="true">Feb 12<sup>th</sup>, 2013</time>
+<time datetime="2013-02-12T22:51:00+03:00" pubdate data-updated="true"></time>
         
       </p>
       
@@ -608,7 +610,7 @@
 <section>
   <h1>Latest Tweets</h1>
   <ul id="tweets">
-    <li class="loading">Status updating...</li>
+    <li class="loading">Status updating&#8230;</li>
   </ul>
   <script type="text/javascript">
     $.domReady(function(){
@@ -625,7 +627,7 @@
 <section>
   <h1>GitHub Repos</h1>
   <ul id="gh_repos">
-    <li class="loading">Status updating...</li>
+    <li class="loading">Status updating&#8230;</li>
   </ul>
   
   <a href="https://github.com/lisachenko">@lisachenko</a> on GitHub
